@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, ArrowUpRight, LoaderCircle } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 import { mailto, site } from "@/config/site";
 import {
   LIMITS,
@@ -272,21 +272,16 @@ export function ContactForm({ serverDelivery }: { serverDelivery: boolean }) {
       </div>
 
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <button type="submit" disabled={phase.name === "sending"} className="btn btn-primary" data-arrow={serverDelivery ? undefined : "up-right"}>
+        <button type="submit" disabled={phase.name === "sending"} className="btn btn-primary">
           {phase.name === "sending" ? (
             <>
               <LoaderCircle className="animate-spin" aria-hidden="true" />
               Sending
             </>
-          ) : serverDelivery ? (
-            <>
-              Send message
-              <ArrowRight aria-hidden="true" />
-            </>
           ) : (
             <>
-              Open in my email app
-              <ArrowUpRight aria-hidden="true" />
+              Submit
+              <ArrowRight aria-hidden="true" />
             </>
           )}
         </button>
