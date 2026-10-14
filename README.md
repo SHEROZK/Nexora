@@ -148,8 +148,3 @@ Screenshots in `public/shots/` are real: the live Food For Less storefront and t
 (captured 13 October 2026), a PG India development build with seeded test data, and a review sheet and source
 page from Video Director's first complete run. Everything else on the project pages is a diagram, and is
 captioned as one. Vega Ventures and Vega Trade have no screenshots because their sites blocked automated capture.
-
-## Design history
-
-`design/directions/` holds the three hero prototypes that were compared before this direction was chosen
-(open the `.html` files directly). They are reference only and are not part of the build.

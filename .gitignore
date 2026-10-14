@@ -43,3 +43,11 @@ next-env.d.ts
 # browser test tool output
 .playwright-mcp/
 !.env.example
+
+# local tooling and working files, kept out of the repository
+.claude/
+.impeccable/
+AGENTS.md
+CLAUDE.md
+design/
+portfolio.png
