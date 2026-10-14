@@ -1,0 +1,191 @@
+{
+  "hero": {
+    "wordOne": "YOUR IDEA",
+    "wordTwo": "WE BUILD",
+    "heading": "I turn rough ideas into working software.",
+    "caption": "Full-stack developer, AI engineer and creative technologist in Dubai. I design the interface, engineer the system behind it, and put AI to work where it earns its place."
+  },
+  "about": {
+    "intro": "Most software fails at the joins: where the screen meets the API, where the API meets the money, where a model meets real input. I build on both sides of each join, so there is nobody to hand the problem to.",
+    "background": "I studied computer science in Mumbai and started out building websites for clients. I later worked in business development, which is where I learned to read a problem from the owner's side of the table. I build software in Dubai now."
+  },
+  "availability": {
+    "open": true,
+    "label": "Taking on new projects"
+  },
+  "motion": {
+    "smoothScroll": true,
+    "reveal": "rise",
+    "imageMask": "varied",
+    "hero": "full",
+    "drift": true,
+    "speed": "normal",
+    "flowField": true,
+    "magnetic": true
+  },
+  "hidden": [],
+  "overrides": {},
+  "projects": [
+    {
+      "slug": "e-invoicing-copilot",
+      "title": "E-invoicing Copilot",
+      "category": "UAE e-invoicing readiness validator",
+      "summary": "Reads a company's invoice export and reports, invoice by invoice, what would stop each one being sent as a UAE e-invoice.",
+      "group": "product",
+      "featured": false,
+      "year": "2026",
+      "statusKind": "development",
+      "statusLabel": "Stage 1 built",
+      "statusNote": "The validator is built and tested against a fictional sample dataset. It checks the Ministry of Finance mandatory fields. The full PINT-AE schema rules are not checked yet.",
+      "roleTitle": "Developer",
+      "roleNote": "Design and build of the validator and its report.",
+      "stack": [
+        "Python",
+        "Standard library",
+        "CSV",
+        "Excel",
+        "unittest"
+      ],
+      "surface": "cobalt",
+      "linkLabel": "",
+      "linkHref": "",
+      "overview": [
+        "The UAE is introducing mandatory e-invoicing in the PINT-AE format. Most businesses do not know whether the invoices their accounting system produces today would pass. This tool answers that from an export.",
+        "It reads a CSV or Excel export, checks every invoice against the Ministry of Finance mandatory-fields document, and writes a readiness report and a findings file: which invoices are ready, which are blocked, and what to fix first.",
+        "Each rule is tagged by how certain it is: stated in the official document, plain arithmetic, or an assumption that still needs confirming against the specification. The report never presents a guess as a requirement."
+      ],
+      "points": [
+        "Wrote the rule engine and its checks for seller, buyer, header, line and total fields",
+        "Built loaders for flat CSV and Excel tables, and for formatted Excel invoices through a per-template cell map",
+        "Detected data damaged by spreadsheet software, such as a 15-digit tax number turned into scientific notation",
+        "Wrote the report generator and 53 unit tests"
+      ],
+      "image": null
+    },
+    {
+      "slug": "ai-menu-integrator",
+      "title": "AI Menu Integrator",
+      "category": "Menu digitisation SaaS for restaurants and POS systems",
+      "summary": "A multi-tenant service that takes a restaurant's menu as PDFs or photos and turns it into structured menu data a point-of-sale system can import.",
+      "group": "ai",
+      "featured": false,
+      "year": "2026",
+      "statusKind": "development",
+      "statusLabel": "In development",
+      "statusNote": "Accounts, organisations, roles, restaurants and menu import are built: uploaded files are rendered page by page and their text is extracted, with OCR for scans. Turning that text into products and prices, the menu editor and the exports are not built yet.",
+      "roleTitle": "Developer",
+      "roleNote": "Architecture and build.",
+      "stack": [
+        "Python",
+        "FastAPI",
+        "Next.js",
+        "PostgreSQL",
+        "Row Level Security",
+        "Alembic",
+        "OCR"
+      ],
+      "surface": "yellow",
+      "linkLabel": "",
+      "linkHref": "",
+      "overview": [
+        "Restaurants keep their menus as PDFs and photos. Point-of-sale and delivery systems need them as structured data: items, prices and options. Retyping is slow and goes wrong.",
+        "The service is a modular monolith: a Next.js web app, a FastAPI service, PostgreSQL as both the database and the task queue, and separate worker processes for document handling. Every record is isolated per organisation with row-level security.",
+        "Today it gets as far as every page of every uploaded file rendered to an image, with its text extracted and positioned. Progress, per-page results, failures, retry and cancel are all visible in the app."
+      ],
+      "points": [
+        "Built accounts, organisations, members and roles, and restaurants with locations",
+        "Built upload and menu import for PDF, PNG, JPEG and WebP files",
+        "Built the background worker that renders pages and extracts text, using the file's own text layer where there is one and OCR for scans",
+        "Isolated every organisation's data with row-level security"
+      ],
+      "image": null
+    },
+    {
+      "slug": "ivy-tile",
+      "title": "Ivy Tile",
+      "category": "Ecommerce store for a tile retailer",
+      "summary": "An online store for a tile business, built on WooCommerce, bringing the catalogue, product photography and brand assets into one site.",
+      "group": "website",
+      "featured": false,
+      "year": "2026",
+      "statusKind": "development",
+      "statusLabel": "In development",
+      "statusNote": "A redevelopment in progress. No launch date, sales or traffic figures are stated here.",
+      "roleTitle": "Website build",
+      "roleNote": "",
+      "stack": [
+        "WordPress",
+        "WooCommerce",
+        "WoodMart",
+        "Elementor"
+      ],
+      "surface": "red",
+      "linkLabel": "",
+      "linkHref": "",
+      "overview": [
+        "A redevelopment of a tile retailer's website into a full online store: product catalogue, categories, product pages and checkout, on WooCommerce with the WoodMart theme and Elementor for page building."
+      ],
+      "points": [
+        "Store setup on WordPress and WooCommerce",
+        "Theme and page building with WoodMart and Elementor",
+        "Catalogue structure and product content"
+      ],
+      "image": null
+    },
+    {
+      "slug": "ugc-videos",
+      "title": "UGC Videos",
+      "category": "Short-form product video",
+      "summary": "Short, user-style videos made for brands to use on social feeds and product pages.",
+      "group": "marketing",
+      "featured": false,
+      "year": "2026",
+      "statusKind": "live",
+      "statusLabel": "Service",
+      "statusNote": "Offered as a service. Examples will be added here.",
+      "roleTitle": "Creator and editor",
+      "roleNote": "",
+      "stack": [
+        "Short-form video",
+        "Video editing",
+        "Social content"
+      ],
+      "surface": "ink",
+      "linkLabel": "",
+      "linkHref": "",
+      "overview": [
+        "Short, phone-native videos in the style people already watch: a product shown in use, filmed and cut for vertical feeds."
+      ],
+      "points": [],
+      "image": null
+    },
+    {
+      "slug": "seo",
+      "title": "SEO",
+      "category": "Search engine optimisation",
+      "summary": "Making websites easier for search engines to read: structure, speed, metadata and content.",
+      "group": "marketing",
+      "featured": false,
+      "year": "2026",
+      "statusKind": "live",
+      "statusLabel": "Service",
+      "statusNote": "Offered as a service. Examples will be added here.",
+      "roleTitle": "Optimisation",
+      "roleNote": "",
+      "stack": [
+        "Technical SEO",
+        "Page speed",
+        "Metadata",
+        "Structured data"
+      ],
+      "surface": "paper",
+      "linkLabel": "",
+      "linkHref": "",
+      "overview": [
+        "Search work on the sites I build and maintain: clean page structure, fast loading, accurate titles and descriptions, sitemaps and structured data. This portfolio ships with those in place."
+      ],
+      "points": [],
+      "image": null
+    }
+  ]
+}
