@@ -29,6 +29,7 @@ export function Hero() {
             <span data-word="1" className="block w-max">
               <span className="block animate-slide-right text-accent">{hero.wordOne}</span>
             </span>
+            {/* The lines are blocks, so without this space copied or extracted text reads "YOUR IDEAWE BUILD". */}{" "}
             {hero.wordTwo ? (
               <span data-word="2" className="block w-max">
                 <span className="block animate-slide-left">{hero.wordTwo}</span>

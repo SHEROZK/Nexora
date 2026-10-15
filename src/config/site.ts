@@ -9,6 +9,7 @@
 import { SPEED_FACTOR, store } from "@/content/store";
 
 const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || null;
+const productionUrl = "https://nexoratechnology.me";
 
 export const site = {
   name: "Nexora",
@@ -22,15 +23,26 @@ export const site = {
   timezone: "GST (UTC+4)",
 
   /**
-   * Production origin, without a trailing slash. Set NEXT_PUBLIC_SITE_URL at deploy time.
-   * While it is null, canonical URLs and the sitemap are generated against localhost
-   * and robots.txt asks crawlers to stay away.
+   * Production origin, without a trailing slash. NEXT_PUBLIC_SITE_URL overrides it (for a
+   * preview domain, say); production builds fall back to nexoratechnology.me. While it is
+   * null (development), canonical URLs point at localhost and robots.txt asks crawlers to stay away.
    */
-  url: envUrl,
+  url: envUrl ?? (process.env.NODE_ENV === "production" ? productionUrl : null),
   fallbackUrl: "http://localhost:3000",
 
-  /** Taken from the CV on file. Change it here if you want a different public address. */
-  email: "sherozk7862@gmail.com",
+  /** The public business address, on the site's own domain. */
+  email: "sheroz@nexoratechnology.me",
+
+  /** The person behind Nexora, named on the e-invoicing page. */
+  founder: {
+    name: "Sheroze Khan",
+    role: "Founder and developer",
+    /** Not provided yet. Put a square photo in /public and set e.g. "/founder.webp". */
+    photo: null as string | null,
+  },
+
+  /** Not provided yet. A Cal.com or Calendly link for 20-minute calls; the button is hidden while null. */
+  booking: null as string | null,
 
   /** Shown in the hero and the contact section. Edited in the admin panel. */
   availability: {

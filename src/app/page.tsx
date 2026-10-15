@@ -44,8 +44,8 @@ export default function Home() {
         <Marquee words={["Product", "System", "Intelligence"]} className="t-giant text-[min(11vw,17svh)] leading-[0.9]" />
         <div className="shell mt-16 grid gap-x-12 gap-y-14 md:mt-24 lg:grid-cols-12">
           <SplitHeading as="p" className="t-display max-w-[26ch] text-[clamp(1.5rem,2.9vw,2.875rem)] leading-[1.06] lg:col-span-7 lg:max-w-none">
-            I build the product, the system behind it and the <em className="accent">intelligence</em> inside it. One
-            person, the whole way down the stack.
+            I build the product, the system behind it and the <em className="accent">intelligence</em> inside it, from the
+            interface down to the database.
           </SplitHeading>
           <ol className="max-w-2xl lg:col-span-4 lg:col-start-9 lg:max-w-none">
             {claims

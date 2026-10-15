@@ -671,9 +671,9 @@ export const builtInProjects: Project[] = [
     featured: true,
     year: "2025 to 2026",
     status: {
-      kind: "live",
-      label: "Live, access-gated",
-      note: "ventureworld.net is online behind a site password, so the public cannot browse it yet.",
+      kind: "development",
+      label: "Private, pre-launch",
+      note: "Deployed at ventureworld.net behind a site password. The client has not opened it to the public, so nothing beyond the gate can be checked yet.",
     },
     role: {
       title: "Lead developer",
