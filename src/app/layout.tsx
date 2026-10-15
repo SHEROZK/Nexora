@@ -9,6 +9,7 @@ import { MotionProvider } from "@/components/motion/MotionProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CommandPalette } from "@/components/navigation/CommandPalette";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 // Display: a grotesque with ink traps and a width axis, set condensed and heavy for the poster type.
@@ -110,6 +111,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </MotionProvider>
         <CommandPalette />
         <JsonLd data={siteSchema(services)} />
+        <Analytics />
       </body>
     </html>
   );
