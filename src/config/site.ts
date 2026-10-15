@@ -8,7 +8,14 @@
 
 import { SPEED_FACTOR, store } from "@/content/store";
 
-const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") || null;
+/** Accepts "example.com" as well as "https://example.com/", since a bare domain is easy to paste into a host's settings. */
+function originFrom(value: string | undefined) {
+  const trimmed = value?.trim().replace(/\/+$/, "");
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+const envUrl = originFrom(process.env.NEXT_PUBLIC_SITE_URL);
 const productionUrl = "https://nexoratechnology.me";
 
 export const site = {
