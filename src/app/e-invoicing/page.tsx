@@ -241,7 +241,7 @@ export default function EInvoicingPage() {
         <div className="md:col-span-6 md:col-start-7">
           <p className="t-body-lg max-w-[56ch]">
             The readiness check runs on a validator we built: it reads a CSV or Excel invoice export and reports,
-            invoice by invoice, which fields would stop it being sent as a UAE e-invoice, and what to fix first.
+            invoice by invoice, which mandatory fields are missing or malformed, and what to fix first.
           </p>
           <ul className="mt-6 border-t border-line text-fg-2">
             <li className="border-b border-line py-4">

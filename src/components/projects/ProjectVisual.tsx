@@ -478,6 +478,8 @@ const captions: Record<VisualKind, string> = {
 };
 
 export function visualCaption(project: Project) {
+  // Projects added in the panel get a plate whether or not they have a link, so only promise one that exists.
+  if (project.visual === "plate" && project.links.length === 0) return "Title plate, not a screenshot.";
   return captions[project.visual];
 }
 
@@ -496,6 +498,6 @@ export function ProjectVisual({ project }: { project: Project }) {
     case "voice":
       return <Voice />;
     case "plate":
-      return <Plate title={project.title} caption={project.links[0]?.label.toUpperCase() ?? "CLIENT WEBSITE"} />;
+      return <Plate title={project.title} caption={(project.links[0]?.label ?? project.category).toUpperCase()} />;
   }
 }

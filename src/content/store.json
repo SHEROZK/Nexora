@@ -30,7 +30,7 @@
       "slug": "e-invoicing-copilot",
       "title": "E-invoicing Copilot",
       "category": "UAE e-invoicing readiness validator",
-      "summary": "Reads a company's invoice export and reports, invoice by invoice, what would stop each one being sent as a UAE e-invoice.",
+      "summary": "Reads a company's invoice export and reports, invoice by invoice, which mandatory fields are missing or malformed for a UAE e-invoice.",
       "group": "product",
       "featured": false,
       "year": "2026",
@@ -50,8 +50,8 @@
       "linkLabel": "",
       "linkHref": "",
       "overview": [
-        "The UAE is introducing mandatory e-invoicing in the PINT-AE format. Most businesses do not know whether the invoices their accounting system produces today would pass. This tool answers that from an export.",
-        "It reads a CSV or Excel export, checks every invoice against the Ministry of Finance mandatory-fields document, and writes a readiness report and a findings file: which invoices are ready, which are blocked, and what to fix first.",
+        "The UAE is introducing mandatory e-invoicing in the PINT-AE format. Most businesses do not know whether the invoices their accounting system produces today carry the fields it requires. This tool gives a first answer from an export.",
+        "It reads a CSV or Excel export, checks every invoice against the Ministry of Finance mandatory-fields document, and writes a readiness report and a findings file: which invoices pass those checks, which fail them, and what to fix first. Passing does not mean an invoice is fully PINT-AE compliant; it means the mandatory fields are there.",
         "Each rule is tagged by how certain it is: stated in the official document, plain arithmetic, or an assumption that still needs confirming against the specification. The report never presents a guess as a requirement."
       ],
       "points": [
