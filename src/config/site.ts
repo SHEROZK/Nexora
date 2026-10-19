@@ -6,7 +6,7 @@
  * UI hides the element rather than showing a placeholder.
  */
 
-import { SPEED_FACTOR, store } from "@/content/store";
+import { SOCIALS, SPEED_FACTOR, store } from "@/content/store";
 
 /** Accepts "example.com" as well as "https://example.com/", since a bare domain is easy to paste into a host's settings. */
 function originFrom(value: string | undefined) {
@@ -64,13 +64,11 @@ export const site = {
   /** The opening and background paragraphs of the About page. Edited in the admin panel. */
   about: store.about,
 
-  links: {
-    github: "https://github.com/SHEROZK",
-    /** Not provided yet. Add the full profile URL to show the link. */
-    linkedin: null as string | null,
-    /** Not provided yet. Put a PDF in /public and set e.g. "/nexora-profile.pdf". */
-    resume: null as string | null,
-  },
+  /** Social profiles, edited in the admin panel. An empty address hides that icon everywhere. */
+  social: store.social,
+
+  /** Not provided yet. Put a PDF in /public and set e.g. "/nexora-profile.pdf". */
+  resume: null as string | null,
 
   /** Facts that appear on the About page. Only what can be backed up. */
   background: [
@@ -87,6 +85,9 @@ export const motion = store.motion;
 export const motionSpeed = SPEED_FACTOR[store.motion.speed];
 
 export const siteUrl = site.url ?? site.fallbackUrl;
+
+/** The social profiles that have an address, in display order. */
+export const socialProfiles = SOCIALS.filter(({ id }) => site.social[id]).map(({ id, label }) => ({ id, label, href: site.social[id] }));
 
 export function absoluteUrl(path = "/") {
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;

@@ -7,9 +7,11 @@ import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { adjacentProjects, getProject, projectIndex, projects } from "@/content/projects";
 import { OrderMachine } from "@/components/interactive/OrderMachine";
 import { PipelineExplorer } from "@/components/interactive/PipelineExplorer";
+import { ImageDeck } from "@/components/projects/ImageDeck";
 import { ProjectVisual, visualCaption } from "@/components/projects/ProjectVisual";
 import { Shot } from "@/components/ui/Shot";
 import { Status } from "@/components/ui/Status";
+import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { cn } from "@/lib/cn";
 import { breadcrumbSchema, pageMetadata, projectSchema } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -85,6 +87,11 @@ async function CaseStudy({ params }: Props) {
 
   const { previous, next } = adjacentProjects(project.slug);
   const number = projectIndex(project.slug);
+  // Photos and the video are numbered first; the diagram or title plate comes after them.
+  const media = project.images.length + (project.video ? 1 : 0);
+  // Two or more ordinary photos become a shuffleable pile; panoramic strips keep their own scrolling row.
+  const strips = project.images.filter((image) => image.width / image.height > 4);
+  const prints = project.images.filter((image) => image.width / image.height <= 4);
 
   return (
     <article>
@@ -139,7 +146,21 @@ async function CaseStudy({ params }: Props) {
 
       {/* Pictures first: real screens and artifacts where they exist, then the diagram. */}
       <div className="shell py-12 md:py-20">
-        {project.images.length > 0 ? (
+        {prints.length >= 2 ? (
+          <>
+            <ImageDeck images={prints} />
+            {strips.map((image, i) => (
+              <figure key={image.src} className="mt-14 min-w-0 md:mt-20">
+                <div className="-mx-[var(--spacing-gutter)] overflow-x-auto border-y-2 border-ink" tabIndex={0} role="group" aria-label={`${image.alt} Scroll sideways to see all of it.`}>
+                  <Image src={image.src} width={image.width} height={image.height} alt={image.alt} sizes="160vw" className="block h-auto w-[160vw] max-w-none md:w-full" />
+                </div>
+                <figcaption className="t-data mt-3 text-fg-2">
+                  Fig. {prints.length + i + 1}: {image.caption}
+                </figcaption>
+              </figure>
+            ))}
+          </>
+        ) : project.images.length > 0 ? (
           <div className="grid items-start gap-x-8 gap-y-12 md:grid-cols-12">
             {project.images.map((image, i) => {
               const ratio = image.width / image.height;
@@ -170,12 +191,21 @@ async function CaseStudy({ params }: Props) {
           </div>
         ) : null}
 
-        <figure className={cn("md:w-[72%]", project.images.length > 0 && "mt-14 md:ml-auto md:mt-20")}>
+        {project.video ? (
+          <figure className={cn("md:w-[84%]", project.images.length > 0 && "mt-14 md:mt-20")}>
+            <VideoPlayer video={project.video} title={project.title} />
+            <figcaption className="t-data mt-3 text-fg-2">
+              Fig. {project.images.length + 1}: {project.video.caption || "Video"}
+            </figcaption>
+          </figure>
+        ) : null}
+
+        <figure className={cn("md:w-[72%]", media > 0 && "mt-14 md:ml-auto md:mt-20")}>
           <div className="aspect-[16/10] overflow-hidden border-2 border-ink">
             <ProjectVisual project={project} />
           </div>
           <figcaption className="t-data mt-3 text-fg-2">
-            {project.images.length > 0 ? `Fig. ${project.images.length + 1}: ` : ""}
+            {media > 0 ? `Fig. ${media + 1}: ` : ""}
             {visualCaption(project)}
           </figcaption>
         </figure>

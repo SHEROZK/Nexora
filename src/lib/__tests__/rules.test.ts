@@ -4,6 +4,7 @@ import { STAGES, approve, createRun, cursor, editArtifact, isComplete, run } fro
 import { PROJECT_TYPES, emailBody, emailSubject, hasErrors, normalise, validate } from "../contact";
 import { projects, builtInProjects, adjacentProjects, getProject } from "../../content/projects";
 import { sanitizeStore, slugify } from "../../content/store";
+import { videoEmbed } from "../video";
 import { services } from "../../content/services";
 import { capabilityLayers } from "../../content/capabilities";
 
@@ -194,12 +195,63 @@ describe("content store", () => {
       ["food-for-less"],
     );
     expect(store.projects.map((project) => project.slug)).toEqual(["fine"]);
-    expect(store.projects[0].linkHref).toBe("");
-    expect(store.projects[0].image).toBeNull();
+    expect(store.projects[0].links).toEqual([]);
+    expect(store.projects[0].images).toEqual([]);
+  });
+
+  it("moves an older single link and image into the lists", () => {
+    const image = { src: "/shots/app-1.png", width: 1200, height: 800, alt: "A", caption: "B" };
+    const [project] = sanitizeStore({ projects: [{ title: "Old", linkLabel: "Site", linkHref: "https://old.example", image }] }).projects;
+    expect(project.links).toEqual([{ label: "Site", href: "https://old.example" }]);
+    expect(project.images).toEqual([image]);
+  });
+
+  it("caps links at four and photos at three, and drops unsafe links", () => {
+    const image = (n: number) => ({ src: `/shots/p-${n}.png`, width: 10, height: 10 });
+    const [project] = sanitizeStore({
+      projects: [
+        {
+          title: "Many",
+          links: [
+            { label: "Bad", href: "javascript:alert(1)" },
+            ...[1, 2, 3, 4, 5].map((n) => ({ label: `L${n}`, href: `https://${n}.example` })),
+          ],
+          images: [1, 2, 3, 4].map(image),
+        },
+      ],
+    }).projects;
+    expect(project.links.map((link) => link.label)).toEqual(["L1", "L2", "L3", "L4"]);
+    expect(project.images.map((item) => item.src)).toEqual(["/shots/p-1.png", "/shots/p-2.png", "/shots/p-3.png"]);
+  });
+
+  it("keeps only video addresses the site can play", () => {
+    const video = (src: string) => sanitizeStore({ projects: [{ title: "V", video: { src, caption: "Demo" } }] }).projects[0].video;
+    expect(video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toEqual({ src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", caption: "Demo" });
+    expect(video("/videos/demo-abc.mp4")?.src).toBe("/videos/demo-abc.mp4");
+    expect(video("http://example.com/a.mp4")).toBeNull();
+    expect(video("/videos/../secret.mp4")).toBeNull();
+    expect(video("https://example.com/page")).toBeNull();
+  });
+
+  it("keeps social links only when they are https addresses", () => {
+    const store = sanitizeStore({ social: { linkedin: " https://www.linkedin.com/in/someone ", github: "javascript:alert(1)", myspace: "https://x" } });
+    expect(store.social.linkedin).toBe("https://www.linkedin.com/in/someone");
+    expect(store.social.github).toBe("");
+    expect(Object.keys(store.social)).not.toContain("myspace");
   });
 
   it("only hides projects that exist", () => {
     expect(sanitizeStore({ hidden: ["pg-india", "nope"] }, ["pg-india", "food-for-less"]).hidden).toEqual(["pg-india"]);
+  });
+});
+
+describe("video addresses", () => {
+  it("turns share links into embeds", () => {
+    expect(videoEmbed("https://youtu.be/dQw4w9WgXcQ")).toEqual({ kind: "iframe", src: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" });
+    expect(videoEmbed("https://www.youtube.com/shorts/dQw4w9WgXcQ")).toEqual({ kind: "iframe", src: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" });
+    expect(videoEmbed("https://vimeo.com/76979871")).toEqual({ kind: "iframe", src: "https://player.vimeo.com/video/76979871" });
+    expect(videoEmbed("https://www.loom.com/share/0123456789abcdef")).toEqual({ kind: "iframe", src: "https://www.loom.com/embed/0123456789abcdef" });
+    expect(videoEmbed("https://cdn.example.com/clip.webm")).toEqual({ kind: "file", src: "https://cdn.example.com/clip.webm" });
   });
 });
 
@@ -210,7 +262,7 @@ describe("edits to built-in projects", () => {
       ["pg-india", "food-for-less"],
     );
     expect(Object.keys(store.overrides)).toEqual(["pg-india"]);
-    expect(store.overrides["pg-india"]).toMatchObject({ slug: "pg-india", title: "PG Hub", surface: "ink", image: null });
+    expect(store.overrides["pg-india"]).toMatchObject({ slug: "pg-india", title: "PG Hub", surface: "ink", images: [], video: null });
   });
 
   it("drops an edit that has no title", () => {

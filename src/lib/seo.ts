@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { absoluteUrl, site, siteUrl } from "@/config/site";
+import { absoluteUrl, site, siteUrl, socialProfiles } from "@/config/site";
 import type { Project } from "@/content/projects";
 import type { Service } from "@/content/services";
 
@@ -53,7 +53,7 @@ export function siteSchema(services: Service[]) {
         email: `mailto:${site.email}`,
         address: { "@type": "PostalAddress", addressLocality: "Dubai", addressCountry: "AE" },
         knowsAbout: services.map((service) => service.title),
-        sameAs: [site.links.github, site.links.linkedin].filter(Boolean),
+        sameAs: socialProfiles.map((profile) => profile.href),
       },
       {
         "@type": "WebSite",

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Check, X } from "lucide-react";
-import { mailto, site } from "@/config/site";
+import { mailto, site, socialProfiles } from "@/config/site";
 import { PageIntro } from "@/components/ui/PageIntro";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 import { Status } from "@/components/ui/Status";
 import { pageMetadata } from "@/lib/seo";
 
@@ -295,17 +296,8 @@ export default function EInvoicingPage() {
               which is where I learned to read a problem from the owner&rsquo;s side. I now build software in Dubai,
               including the validator above. On an e-invoicing project, I&rsquo;m the person who does the work.
             </p>
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3">
-              {site.links.linkedin ? (
-                <a href={site.links.linkedin} className="link inline-flex items-center gap-1.5" target="_blank" rel="noopener noreferrer">
-                  LinkedIn
-                  <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                </a>
-              ) : null}
-              <a href={site.links.github} className="link inline-flex items-center gap-1.5" target="_blank" rel="noopener noreferrer">
-                GitHub
-                <ArrowUpRight className="size-3.5" aria-hidden="true" />
-              </a>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <SocialLinks profiles={socialProfiles} />
               <Link href="/work" className="link inline-flex items-center gap-1.5">
                 Other work
                 <ArrowRight className="size-3.5" aria-hidden="true" />

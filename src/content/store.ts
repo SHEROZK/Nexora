@@ -1,10 +1,11 @@
+import { videoEmbed } from "@/lib/video";
 import raw from "./store.json";
 
 /**
- * Everything the admin panel can change lives in store.json, next to this file.
- * The panel (http://localhost:3000/admin, development only) writes that file;
- * the site imports it, so a saved change appears on the next hot reload and
- * ships with the next deploy. This module is the single place that defines its shape.
+ * Everything the admin panel can change. The panel (/admin) saves it to Supabase; every
+ * build first copies it into store.json, next to this file (scripts/pull-store.mjs), and
+ * the site imports that file. Saving on the live site triggers a rebuild, so a change is
+ * live a minute or two later. This module is the single place that defines its shape.
  */
 
 export type Surface = "paper" | "ink" | "cobalt" | "yellow" | "red";
@@ -18,6 +19,41 @@ export interface StoredImage {
   alt: string;
   caption: string;
 }
+
+export interface StoredLink {
+  label: string;
+  href: string;
+}
+
+/** A YouTube, Vimeo or Loom address, an https link to an MP4/WebM, or a file uploaded to /videos. */
+export interface StoredVideo {
+  src: string;
+  caption: string;
+}
+
+/** Where files uploaded in the panel are served from: the public "media" bucket in Supabase Storage. */
+export const MEDIA_URL = `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "")}/storage/v1/object/public/media`;
+
+/** An image the panel uploaded: in Supabase Storage, or in /public/shots from before it was used. */
+function isUploadedImage(src: string) {
+  const file = src.startsWith(`${MEDIA_URL}/`) ? src.slice(MEDIA_URL.length) : src;
+  return /^\/shots\/[a-z0-9-]+\.(png|jpe?g|webp)$/.test(file);
+}
+
+export const MAX_LINKS = 4;
+export const MAX_IMAGES = 3;
+
+/** Social profiles, in the order their icons appear. An empty address hides the icon. */
+export const SOCIALS = [
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "github", label: "GitHub" },
+  { id: "x", label: "X" },
+  { id: "instagram", label: "Instagram" },
+  { id: "facebook", label: "Facebook" },
+  { id: "youtube", label: "YouTube" },
+  { id: "tiktok", label: "TikTok" },
+] as const;
+export type SocialId = (typeof SOCIALS)[number]["id"];
 
 /** A project added through the panel. Simpler than the hand-written case studies. */
 export interface StoredProject {
@@ -35,13 +71,18 @@ export interface StoredProject {
   roleNote: string;
   stack: string[];
   surface: Surface;
-  linkLabel: string;
-  linkHref: string;
+  /** Live links, up to MAX_LINKS. An empty label shows the site's host name instead. */
+  links: StoredLink[];
   /** Paragraphs describing what it is. */
   overview: string[];
   /** One line each: what you did. */
   points: string[];
-  image: StoredImage | null;
+  /**
+   * Photos, up to MAX_IMAGES. On a project added here they are its pictures; on one of the
+   * original case studies they are shown after the screenshots already written into it.
+   */
+  images: StoredImage[];
+  video: StoredVideo | null;
 }
 
 export const REVEALS = ["rise", "fade", "wipe", "none"] as const;
@@ -64,6 +105,7 @@ export interface Store {
   hero: { wordOne: string; wordTwo: string; heading: string; caption: string };
   about: { intro: string; background: string };
   availability: { open: boolean; label: string };
+  social: Record<SocialId, string>;
   motion: MotionSettings;
   /** Slugs of built-in projects taken off the site. */
   hidden: string[];
@@ -131,12 +173,42 @@ export function slugify(title: string) {
 function cleanImage(value: unknown): StoredImage | null {
   if (!value || typeof value !== "object") return null;
   const image = value as Record<string, unknown>;
-  const src = text(image.src, 200);
+  const src = text(image.src, 300);
   const width = Number(image.width);
   const height = Number(image.height);
-  // Only files the upload route wrote into /public/shots are accepted.
-  if (!/^\/shots\/[a-z0-9-]+\.(png|jpe?g|webp)$/.test(src) || !(width > 0) || !(height > 0)) return null;
+  // Only files the upload route stored are accepted.
+  if (!isUploadedImage(src) || !(width > 0) || !(height > 0)) return null;
   return { src, width: Math.round(width), height: Math.round(height), alt: text(image.alt, 200), caption: text(image.caption, 240) };
+}
+
+const https = (value: unknown) => {
+  const href = text(value, 300);
+  return /^https:\/\/[^\s]+$/.test(href) ? href : "";
+};
+
+function cleanLinks(p: Record<string, unknown>): StoredLink[] {
+  // Older saves held a single linkLabel/linkHref pair.
+  const source = Array.isArray(p.links) ? p.links : [{ label: p.linkLabel, href: p.linkHref }];
+  return source
+    .map((link) => {
+      const item = (link && typeof link === "object" ? link : {}) as Record<string, unknown>;
+      return { label: text(item.label, 60), href: https(item.href) };
+    })
+    .filter((link) => link.href)
+    .slice(0, MAX_LINKS);
+}
+
+function cleanImages(p: Record<string, unknown>): StoredImage[] {
+  // Older saves held a single image.
+  const source = Array.isArray(p.images) ? p.images : [p.image];
+  return source.map(cleanImage).filter((image): image is StoredImage => image !== null).slice(0, MAX_IMAGES);
+}
+
+function cleanVideo(value: unknown): StoredVideo | null {
+  if (!value || typeof value !== "object") return null;
+  const video = value as Record<string, unknown>;
+  const src = text(video.src, 300);
+  return videoEmbed(src) ? { src, caption: text(video.caption, 240) } : null;
 }
 
 function cleanProject(value: unknown, forcedSlug?: string): StoredProject | null {
@@ -145,7 +217,6 @@ function cleanProject(value: unknown, forcedSlug?: string): StoredProject | null
   const title = text(p.title, 60);
   const slug = forcedSlug ?? (text(p.slug, 60) || slugify(title));
   if (!title || !SLUG.test(slug)) return null;
-  const href = text(p.linkHref, 300);
   const statusKind = oneOf(p.statusKind, KINDS, "development");
   return {
     slug,
@@ -162,11 +233,11 @@ function cleanProject(value: unknown, forcedSlug?: string): StoredProject | null
     roleNote: text(p.roleNote, 500),
     stack: lines(p.stack, 16, 40),
     surface: oneOf(p.surface, SURFACES, "paper"),
-    linkLabel: text(p.linkLabel, 60),
-    linkHref: /^https:\/\//.test(href) ? href : "",
+    links: cleanLinks(p),
     overview: lines(p.overview, 8, 900),
     points: lines(p.points, 12, 300),
-    image: cleanImage(p.image),
+    images: cleanImages(p),
+    video: cleanVideo(p.video),
   };
 }
 
@@ -191,14 +262,16 @@ export function sanitizeStore(input: unknown, builtInSlugs: string[] = []): Stor
     projects.push(project);
   }
 
-  // Edits to built-in projects: only for slugs that exist, and never with an image of their own.
+  // Edits to built-in projects: only for slugs that exist. Their images are extras, shown after the written ones.
   const overrides: Record<string, StoredProject> = {};
   const rawOverrides = (source.overrides && typeof source.overrides === "object" ? source.overrides : {}) as Record<string, unknown>;
   for (const slug of builtInSlugs.length > 0 ? builtInSlugs : Object.keys(rawOverrides)) {
     if (!SLUG.test(slug) || !(slug in rawOverrides)) continue;
     const project = cleanProject(rawOverrides[slug], slug);
-    if (project) overrides[slug] = { ...project, image: null };
+    if (project) overrides[slug] = project;
   }
+
+  const social = (source.social ?? {}) as Record<string, unknown>;
 
   return {
     hero: {
@@ -209,6 +282,7 @@ export function sanitizeStore(input: unknown, builtInSlugs: string[] = []): Stor
     },
     about: { intro: text(about.intro, 900), background: text(about.background, 900) },
     availability: { open: availability.open !== false, label: text(availability.label, 60) || "Taking on new projects" },
+    social: Object.fromEntries(SOCIALS.map(({ id }) => [id, https(social[id])])) as Record<SocialId, string>,
     motion: {
       smoothScroll: motion.smoothScroll !== false,
       reveal: oneOf(motion.reveal, REVEALS, "rise"),

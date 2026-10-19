@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
-import { mailto, site } from "@/config/site";
+import { mailto, site, socialProfiles } from "@/config/site";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 import { formBackendConfigured } from "@/lib/contact";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { PageIntro } from "@/components/ui/PageIntro";
@@ -24,11 +25,7 @@ export default function ContactPage() {
   // Decided at build time from server-only environment variables.
   const serverDelivery = formBackendConfigured();
 
-  const elsewhere = [
-    { label: "GitHub", href: site.links.github as string | null },
-    { label: "LinkedIn", href: site.links.linkedin },
-    { label: "Résumé", href: site.links.resume },
-  ].filter((link): link is { label: string; href: string } => Boolean(link.href));
+  const elsewhere = site.resume ? [{ label: "Résumé", href: site.resume }] : [];
 
   return (
     <>
@@ -77,18 +74,21 @@ export default function ContactPage() {
                 {site.location} · {site.timezone}. Remote by default.
               </dd>
             </div>
-            <div className="border-b border-line py-5">
-              <dt className="text-[0.875rem] text-fg-3">Elsewhere</dt>
-              <dd className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
-                {elsewhere.map((link) => (
-                  <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="link inline-flex items-center gap-1.5">
-                    {link.label}
-                    <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                    <span className="sr-only">(opens in a new tab)</span>
-                  </a>
-                ))}
-              </dd>
-            </div>
+            {socialProfiles.length + elsewhere.length > 0 ? (
+              <div className="border-b border-line py-5">
+                <dt className="text-[0.875rem] text-fg-3">Elsewhere</dt>
+                <dd className="mt-3">
+                  <SocialLinks profiles={socialProfiles} />
+                  {elsewhere.map((link) => (
+                    <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="link mt-3 inline-flex items-center gap-1.5">
+                      {link.label}
+                      <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                      <span className="sr-only">(opens in a new tab)</span>
+                    </a>
+                  ))}
+                </dd>
+              </div>
+            ) : null}
           </dl>
 
           <h2 className="mt-10 text-[1.0625rem] font-medium">A useful first message covers</h2>

@@ -1,4 +1,4 @@
-import type { StoredProject } from "@/content/store";
+import type { StoredImage, StoredProject } from "@/content/store";
 import { cn } from "@/lib/cn";
 
 const GROUP_LABELS: Record<StoredProject["group"], string> = {
@@ -13,9 +13,17 @@ const GROUP_LABELS: Record<StoredProject["group"], string> = {
  * same colour tokens and type styles the real pages use. The top block is its colour
  * spread (home page and case-study header); the bottom strip is its row in the work list.
  */
-export function ProjectPreview({ project, dimmed }: { project: StoredProject; dimmed?: boolean }) {
+export function ProjectPreview({ project, dimmed, cover }: { project: StoredProject; dimmed?: boolean; cover?: StoredImage | null }) {
   const title = project.title.trim() || "Project name";
   const stack = project.stack.filter(Boolean).slice(0, 4);
+  // An original case study keeps its written screenshots; the first one stands in for the picture.
+  const picture = cover ?? project.images[0] ?? null;
+  const count = (n: number, one: string, many: string) => (n > 0 ? `${n} ${n === 1 ? one : many}` : null);
+  const extras = [
+    count(project.images.length, cover ? "added photo" : "photo", cover ? "added photos" : "photos"),
+    project.video ? "a video" : null,
+    count(project.links.filter((link) => link.href).length, "live link", "live links"),
+  ].filter(Boolean);
 
   return (
     <figure className={cn("transition-opacity", dimmed && "opacity-45")}>
@@ -50,9 +58,9 @@ export function ProjectPreview({ project, dimmed }: { project: StoredProject; di
               </dl>
             </div>
 
-            {project.image ? (
+            {picture ? (
               // eslint-disable-next-line @next/next/no-img-element -- a panel preview of a local file
-              <img src={project.image.src} alt="" className="max-h-64 w-full border-2 border-ink bg-paper object-cover object-top" />
+              <img src={picture.src} alt="" className="max-h-64 w-full border-2 border-ink bg-paper object-cover object-top" />
             ) : (
               <div className="flex aspect-[16/10] items-end border-2 border-fg p-4">
                 <p className="t-data">
@@ -76,6 +84,7 @@ export function ProjectPreview({ project, dimmed }: { project: StoredProject; di
       <figcaption className="mt-3 text-[0.8125rem] leading-relaxed text-fg-3">
         Top: its colour block on the home page{project.featured ? "" : " (if featured)"} and its case-study header. Bottom: its row in
         the work list, under {GROUP_LABELS[project.group]}.
+        {extras.length > 0 ? ` The case study also shows ${extras.join(", ")}.` : ""}
       </figcaption>
     </figure>
   );

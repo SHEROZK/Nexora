@@ -8,7 +8,7 @@
  * - Sections that are left empty are simply not rendered.
  */
 
-import { store, type ProjectGroup, type StatusKind, type StoredProject, type Surface } from "./store";
+import { store, type ProjectGroup, type StatusKind, type StoredLink, type StoredProject, type StoredVideo, type Surface } from "./store";
 
 export type { ProjectGroup, StatusKind, Surface };
 export type VisualKind =
@@ -47,6 +47,8 @@ export interface Project {
   surface: Surface;
   /** Real screenshots and artifacts, most important first. Empty when none exist. */
   images: ProjectImage[];
+  /** One video, added in the panel. Shown after the images. */
+  video?: StoredVideo;
   links: { label: string; href: string; note?: string }[];
   facts: { label: string; value: string }[];
   problem: string[];
@@ -1068,15 +1070,17 @@ export const builtInProjects: Project[] = [
 ];
 
 /** A project added through the admin panel, expanded to the full case-study shape. */
-function fromStore(p: StoredProject): Project {
-  let host = p.linkLabel;
-  if (!host && p.linkHref) {
-    try {
-      host = new URL(p.linkHref).hostname.replace(/^www\./, "");
-    } catch {
-      host = "Visit";
-    }
+/** A panel link's label, or the site's host name when it was left empty. */
+function linkLabel(link: StoredLink) {
+  if (link.label) return link.label;
+  try {
+    return new URL(link.href).hostname.replace(/^www\./, "");
+  } catch {
+    return "Visit";
   }
+}
+
+function fromStore(p: StoredProject): Project {
   return {
     slug: p.slug,
     title: p.title,
@@ -1090,8 +1094,9 @@ function fromStore(p: StoredProject): Project {
     stack: p.stack,
     visual: "plate",
     surface: p.surface,
-    images: p.image ? [p.image] : [],
-    links: p.linkHref ? [{ label: host, href: p.linkHref }] : [],
+    images: p.images,
+    video: p.video ?? undefined,
+    links: p.links.map((link) => ({ label: linkLabel(link), href: link.href })),
     facts: [],
     problem: [],
     goals: [],
@@ -1108,9 +1113,11 @@ function fromStore(p: StoredProject): Project {
   };
 }
 
-/** A project in the flat shape the admin panel edits. */
+/**
+ * A built-in project in the flat shape the admin panel edits. Its written screenshots stay
+ * in this file, so `images` starts empty: photos added in the panel are shown after them.
+ */
 export function toStored(project: Project): StoredProject {
-  const [link] = project.links;
   return {
     slug: project.slug,
     title: project.title,
@@ -1126,11 +1133,11 @@ export function toStored(project: Project): StoredProject {
     roleNote: project.role.note,
     stack: project.stack,
     surface: project.surface,
-    linkLabel: link?.label ?? "",
-    linkHref: link?.href ?? "",
+    links: project.links.map(({ label, href }) => ({ label, href })),
     overview: project.overview,
     points: project.contribution,
-    image: project.images[0] ?? null,
+    images: [],
+    video: project.video ?? null,
   };
 }
 
@@ -1138,7 +1145,6 @@ export function toStored(project: Project): StoredProject {
 function withOverride(project: Project): Project {
   const edit = store.overrides[project.slug];
   if (!edit) return project;
-  const [firstLink, ...otherLinks] = project.links;
   return {
     ...project,
     title: edit.title,
@@ -1151,7 +1157,10 @@ function withOverride(project: Project): Project {
     role: { title: edit.roleTitle || project.role.title, note: edit.roleNote || project.role.note },
     stack: edit.stack.length > 0 ? edit.stack : project.stack,
     surface: edit.surface,
-    links: edit.linkHref ? [{ ...firstLink, label: edit.linkLabel || firstLink?.label || edit.linkHref, href: edit.linkHref }, ...otherLinks] : project.links,
+    // The panel starts from the written links, so the edited list replaces them. A note survives on a link kept unchanged.
+    links: edit.links.map((link) => ({ label: linkLabel(link), href: link.href, note: project.links.find((written) => written.href === link.href)?.note })),
+    images: [...project.images, ...edit.images],
+    video: edit.video ?? project.video,
     overview: edit.overview.length > 0 ? edit.overview : project.overview,
     contribution: edit.points.length > 0 ? edit.points : project.contribution,
   };

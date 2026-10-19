@@ -13,6 +13,15 @@
     "open": true,
     "label": "Taking on new projects"
   },
+  "social": {
+    "linkedin": "",
+    "github": "https://github.com/SHEROZK",
+    "x": "",
+    "instagram": "",
+    "facebook": "",
+    "youtube": "",
+    "tiktok": ""
+  },
   "motion": {
     "smoothScroll": true,
     "reveal": "rise",
@@ -47,8 +56,7 @@
         "unittest"
       ],
       "surface": "cobalt",
-      "linkLabel": "",
-      "linkHref": "",
+      "links": [],
       "overview": [
         "The UAE is introducing mandatory e-invoicing in the PINT-AE format. Most businesses do not know whether the invoices their accounting system produces today carry the fields it requires. This tool gives a first answer from an export.",
         "It reads a CSV or Excel export, checks every invoice against the Ministry of Finance mandatory-fields document, and writes a readiness report and a findings file: which invoices pass those checks, which fail them, and what to fix first. Passing does not mean an invoice is fully PINT-AE compliant; it means the mandatory fields are there.",
@@ -60,7 +68,8 @@
         "Detected data damaged by spreadsheet software, such as a 15-digit tax number turned into scientific notation",
         "Wrote the report generator and 53 unit tests"
       ],
-      "image": null
+      "images": [],
+      "video": null
     },
     {
       "slug": "ai-menu-integrator",
@@ -85,8 +94,7 @@
         "OCR"
       ],
       "surface": "yellow",
-      "linkLabel": "",
-      "linkHref": "",
+      "links": [],
       "overview": [
         "Restaurants keep their menus as PDFs and photos. Point-of-sale and delivery systems need them as structured data: items, prices and options. Retyping is slow and goes wrong.",
         "The service is a modular monolith: a Next.js web app, a FastAPI service, PostgreSQL as both the database and the task queue, and separate worker processes for document handling. Every record is isolated per organisation with row-level security.",
@@ -98,7 +106,8 @@
         "Built the background worker that renders pages and extracts text, using the file's own text layer where there is one and OCR for scans",
         "Isolated every organisation's data with row-level security"
       ],
-      "image": null
+      "images": [],
+      "video": null
     },
     {
       "slug": "ivy-tile",
@@ -120,8 +129,7 @@
         "Elementor"
       ],
       "surface": "red",
-      "linkLabel": "",
-      "linkHref": "",
+      "links": [],
       "overview": [
         "A redevelopment of a tile retailer's website into a full online store: product catalogue, categories, product pages and checkout, on WooCommerce with the WoodMart theme and Elementor for page building."
       ],
@@ -130,7 +138,8 @@
         "Theme and page building with WoodMart and Elementor",
         "Catalogue structure and product content"
       ],
-      "image": null
+      "images": [],
+      "video": null
     },
     {
       "slug": "ugc-videos",
@@ -151,13 +160,13 @@
         "Social content"
       ],
       "surface": "ink",
-      "linkLabel": "",
-      "linkHref": "",
+      "links": [],
       "overview": [
         "Short, phone-native videos in the style people already watch: a product shown in use, filmed and cut for vertical feeds."
       ],
       "points": [],
-      "image": null
+      "images": [],
+      "video": null
     },
     {
       "slug": "seo",
@@ -179,13 +188,13 @@
         "Structured data"
       ],
       "surface": "paper",
-      "linkLabel": "",
-      "linkHref": "",
+      "links": [],
       "overview": [
         "Search work on the sites I build and maintain: clean page structure, fast loading, accurate titles and descriptions, sitemaps and structured data. This portfolio ships with those in place."
       ],
       "points": [],
-      "image": null
+      "images": [],
+      "video": null
     }
   ]
 }

@@ -5,9 +5,8 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
  *
  * The password lives in ADMIN_PASSWORD (.env.local). Signing in sets an HttpOnly cookie
  * holding an expiry time and an HMAC of it, keyed from the password, so there is no
- * session store and changing the password signs everyone out. The panel still only
- * runs in development: the password is there because `next dev` is reachable from
- * other devices on the same network.
+ * session store and changing the password signs everyone out. The panel runs on the
+ * live site too, so use a long password there; wrong attempts are rate limited.
  */
 
 export const SESSION_COOKIE = "panel_session";
@@ -51,13 +50,10 @@ function readCookie(request: Request, name: string) {
   return undefined;
 }
 
-export type Refusal = { status: number; code: "not_local" | "not_panel" | "no_password" | "signed_out"; message: string };
+export type Refusal = { status: number; code: "not_panel" | "no_password" | "signed_out"; message: string };
 
 /** The checks every panel request passes, in order. Returns null when the request may proceed. */
 export function refuse(request: Request, options: { needsSession: boolean } = { needsSession: true }): Refusal | null {
-  if (process.env.NODE_ENV !== "development") {
-    return { status: 403, code: "not_local", message: "The panel only works while the site runs locally with npm run dev." };
-  }
   // A custom header cannot be sent cross-site without a preflight this server never approves.
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
@@ -66,7 +62,7 @@ export function refuse(request: Request, options: { needsSession: boolean } = { 
   }
   const password = adminPassword();
   if (!password) {
-    return { status: 503, code: "no_password", message: "Set ADMIN_PASSWORD (at least 8 characters) in .env.local to use the panel." };
+    return { status: 503, code: "no_password", message: "Set ADMIN_PASSWORD (at least 8 characters) in .env.local, or in the Vercel project settings for the live site." };
   }
   if (options.needsSession && !sessionIsValid(readCookie(request, SESSION_COOKIE), password)) {
     return { status: 401, code: "signed_out", message: "Sign in to use the panel." };

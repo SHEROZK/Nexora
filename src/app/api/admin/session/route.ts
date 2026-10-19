@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   attempts.delete(address);
   const session = createSession(password);
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(SESSION_COOKIE, session.value, { httpOnly: true, sameSite: "strict", path: "/", maxAge: session.maxAge });
+  response.cookies.set(SESSION_COOKIE, session.value, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/", maxAge: session.maxAge });
   return response;
 }
 
@@ -48,6 +48,6 @@ export async function DELETE(request: Request) {
   const refused = refuse(request, { needsSession: false });
   if (refused) return NextResponse.json({ ok: false, message: refused.message }, { status: refused.status });
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(SESSION_COOKIE, "", { httpOnly: true, sameSite: "strict", path: "/", maxAge: 0 });
+  response.cookies.set(SESSION_COOKIE, "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/", maxAge: 0 });
   return response;
 }

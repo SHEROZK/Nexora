@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   title: { default: siteTitle, template: `%s — ${site.name}` },
   description: site.description,
   applicationName: site.name,
-  authors: [{ name: site.name, url: site.links.github }],
+  authors: [{ name: site.name, url: site.social.github || undefined }],
   creator: site.name,
   publisher: site.name,
   category: "technology",

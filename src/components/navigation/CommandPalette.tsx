@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation";
 import { ArrowUp, ArrowUpRight, Check, Copy, CornerDownLeft, FileText, Mail, Search } from "lucide-react";
 import { navigation } from "@/config/navigation";
-import { mailto, site } from "@/config/site";
+import { mailto, site, socialProfiles } from "@/config/site";
 import { projects } from "@/content/projects";
 import { cn } from "@/lib/cn";
 import { lockScroll, scrollToTop, unlockScroll } from "@/lib/scroll";
@@ -96,34 +96,25 @@ export function CommandPalette() {
           return false;
         },
       },
-      {
-        id: "github",
-        group: "Actions",
-        label: "Open GitHub",
-        hint: site.links.github.replace("https://", ""),
-        keywords: "code repositories source",
+      ...socialProfiles.map((profile) => ({
+        id: profile.id,
+        group: "Actions" as const,
+        label: `Open ${profile.label}`,
+        hint: profile.href.replace(/^https:\/\/(www\.)?/, ""),
+        keywords: "social profile",
         icon: <ArrowUpRight className="size-4" aria-hidden="true" />,
-        run: external(site.links.github),
-      },
+        run: external(profile.href),
+      })),
     ];
 
-    if (site.links.linkedin) {
-      items.push({
-        id: "linkedin",
-        group: "Actions",
-        label: "Open LinkedIn",
-        icon: <ArrowUpRight className="size-4" aria-hidden="true" />,
-        run: external(site.links.linkedin),
-      });
-    }
-    if (site.links.resume) {
+    if (site.resume) {
       items.push({
         id: "resume",
         group: "Actions",
         label: "View résumé",
         keywords: "cv",
         icon: <FileText className="size-4" aria-hidden="true" />,
-        run: external(site.links.resume),
+        run: external(site.resume),
       });
     }
     items.push({

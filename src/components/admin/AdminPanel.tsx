@@ -1,28 +1,37 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
-import { ArrowUpRight, Check, Eye, EyeOff, LoaderCircle, LogOut, Pencil, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpRight, Check, Eye, EyeOff, LoaderCircle, LogOut, Pencil, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
 import {
   HERO_MODES,
   MASKS,
+  MAX_IMAGES,
+  MAX_LINKS,
+  MEDIA_URL,
   MOTION_HELP,
   REVEALS,
+  SOCIALS,
   SPEEDS,
   slugify,
   type MotionSettings,
   type Store,
+  type StoredImage,
+  type StoredLink,
   type StoredProject,
 } from "@/content/store";
 import { cn } from "@/lib/cn";
+import { videoEmbed } from "@/lib/video";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 import { ProjectPreview } from "./ProjectPreview";
 
-type Tab = "projects" | "text" | "motion";
+type Tab = "projects" | "text" | "social" | "motion";
 type Gate = "loading" | "signed-out" | "no-password" | "error" | "ready";
-type Notice = { kind: "idle" } | { kind: "saving" } | { kind: "saved" } | { kind: "error"; message: string };
+type Notice = { kind: "idle" } | { kind: "saving" } | { kind: "saved"; message: string } | { kind: "error"; message: string };
 /** What the form is editing: a new project, one you added, or one of the originals. */
 type Draft = { mode: "new" | "custom" | "builtIn"; slug: string | null; project: StoredProject };
 
 const HEADERS = { "x-site-panel": "1" };
+const isUploadedVideo = (src: string | undefined) => Boolean(src && (src.startsWith("/videos/") || src.startsWith(`${MEDIA_URL}/videos/`)));
 
 /**
  * Saving rewrites the content file, and the dev server reloads the page when that file
@@ -39,9 +48,10 @@ function readUi(): PanelUi {
     const saved = JSON.parse(window.sessionStorage.getItem(UI_KEY) ?? "null") as Partial<PanelUi> | null;
     if (!saved) return fallback;
     return {
-      tab: saved.tab === "text" || saved.tab === "motion" ? saved.tab : "projects",
+      tab: saved.tab === "text" || saved.tab === "social" || saved.tab === "motion" ? saved.tab : "projects",
       selected: typeof saved.selected === "string" ? saved.selected : null,
-      draft: saved.draft && typeof saved.draft === "object" && saved.draft.project ? saved.draft : null,
+      // A form remembered from before photos and links became lists is dropped rather than half-restored.
+      draft: saved.draft && typeof saved.draft === "object" && Array.isArray(saved.draft.project?.links) && Array.isArray(saved.draft.project?.images) ? saved.draft : null,
     };
   } catch {
     return fallback;
@@ -63,11 +73,11 @@ const blank: StoredProject = {
   roleNote: "",
   stack: [],
   surface: "paper",
-  linkLabel: "",
-  linkHref: "",
+  links: [],
   overview: [],
   points: [],
-  image: null,
+  images: [],
+  video: null,
 };
 
 const SURFACES: { id: StoredProject["surface"]; label: string }[] = [
@@ -123,7 +133,7 @@ function SignIn({ onDone }: { onDone: () => void }) {
       if (response.ok && body.ok) onDone();
       else setError(body.message ?? "Sign-in failed.");
     } catch {
-      setError("The local server did not answer. Is npm run dev still running?");
+      setError("The server did not answer. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -165,7 +175,7 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
   const p = draft.project;
   const set = (patch: Partial<StoredProject>) => onChange({ ...p, ...patch });
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<"image" | "video" | null>(null);
   const address = draft.slug ?? slugify(p.title);
 
   const commit = () => {
@@ -174,7 +184,9 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
     if (!address) return setError("The name needs at least one letter or number.");
     if (draft.mode === "new" && taken(address)) return setError(`A project with the address /work/${address} already exists. Use a different name.`);
     if (!p.summary.trim()) return setError("Add a one-sentence summary. It is shown on the home page and in the work list.");
-    if (p.linkHref && !/^https:\/\//.test(p.linkHref.trim())) return setError("The link has to start with https://");
+    const links = p.links.map((link) => ({ label: link.label.trim(), href: link.href.trim() })).filter((link) => link.label || link.href);
+    if (links.some((link) => !/^https:\/\/\S+$/.test(link.href))) return setError("Every live link needs an address that starts with https://");
+    if (p.video && !videoEmbed(p.video.src)) return setError("The video has to be a YouTube, Vimeo or Loom link, an https link to an MP4 or WebM file, or an uploaded file.");
     onCommit({
       ...p,
       title,
@@ -182,28 +194,73 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
       stack: p.stack.map((item) => item.trim()).filter(Boolean),
       overview: p.overview.map((item) => item.trim()).filter(Boolean),
       points: p.points.map((item) => item.trim()).filter(Boolean),
+      links,
+      video: p.video ? { src: p.video.src.trim(), caption: p.video.caption.trim() } : null,
     });
   };
 
-  const upload = async (file: File) => {
-    setUploading(true);
+  // Ask the server for an upload address, send the file straight to Supabase, then have the server check it.
+  const send = async (file: File, kind: "image" | "video") => {
+    const json = { ...HEADERS, "Content-Type": "application/json" };
+    const ask = await fetch("/api/admin/upload", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify({ kind, name: p.title || "project", type: file.type, size: file.size }),
+    });
+    const slot = await ask.json();
+    if (!ask.ok || !slot.ok) throw new Error(slot.message ?? `The ${kind} could not be uploaded.`);
+
+    const sent = await fetch(slot.uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type, "cache-control": "max-age=31536000", apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "" },
+      body: file,
+    });
+    if (!sent.ok) throw new Error(`The ${kind} could not be sent to storage. Try again.`);
+
+    const check = await fetch("/api/admin/upload", { method: "PUT", headers: json, body: JSON.stringify({ path: slot.path }) });
+    const body = await check.json();
+    if (!check.ok || !body.ok) throw new Error(body.message ?? `The ${kind} could not be uploaded.`);
+    return body.src as string;
+  };
+
+  const uploadImage = async (file: File) => {
+    setUploading("image");
     setError(null);
     try {
-      const bitmap = await createImageBitmap(file);
-      const form = new FormData();
-      form.set("file", file);
-      form.set("name", p.title || "project");
-      const response = await fetch("/api/admin/upload", { method: "POST", headers: HEADERS, body: form });
-      const body = await response.json();
-      if (!response.ok || !body.ok) setError(body.message ?? "The image could not be uploaded.");
-      else set({ image: { src: body.src, width: bitmap.width, height: bitmap.height, alt: p.image?.alt ?? "", caption: p.image?.caption ?? "" } });
+      const bitmap = await createImageBitmap(file).catch(() => {
+        throw new Error("That file could not be read as an image. Use a PNG, JPG or WebP.");
+      });
+      const { width, height } = bitmap;
       bitmap.close();
-    } catch {
-      setError("That file could not be read as an image. Use a PNG, JPG or WebP.");
+      const src = await send(file, "image");
+      set({ images: [...p.images, { src, width, height, alt: "", caption: "" }].slice(0, MAX_IMAGES) });
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : "The image could not be uploaded.");
     } finally {
-      setUploading(false);
+      setUploading(null);
     }
   };
+
+  const uploadVideo = async (file: File) => {
+    setUploading("video");
+    setError(null);
+    try {
+      const src = await send(file, "video");
+      set({ video: { src, caption: p.video?.caption ?? "" } });
+    } catch (problem) {
+      setError(problem instanceof Error ? problem.message : "The video could not be uploaded.");
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const setImage = (index: number, patch: Partial<StoredImage>) => set({ images: p.images.map((image, i) => (i === index ? { ...image, ...patch } : image)) });
+  const moveImage = (index: number, by: -1 | 1) => {
+    const images = [...p.images];
+    [images[index], images[index + by]] = [images[index + by], images[index]];
+    set({ images });
+  };
+  const setLink = (index: number, patch: Partial<StoredLink>) => set({ links: p.links.map((link, i) => (i === index ? { ...link, ...patch } : link)) });
 
   return (
     <section aria-labelledby="form-heading">
@@ -278,11 +335,34 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
             {(id) => <textarea id={id} rows={5} value={p.points.join("\n")} onChange={(e) => set({ points: e.target.value.split("\n") })} className={cn(field, "py-3 leading-relaxed")} />}
           </Field>
         </div>
-        <div className="sm:col-span-2">
-          <Field label="Link (optional)" hint="Must start with https://">
-            {(id) => <input id={id} type="url" value={p.linkHref} maxLength={300} onChange={(e) => set({ linkHref: e.target.value })} className={cn(field, "h-12")} />}
-          </Field>
-        </div>
+        <fieldset className="sm:col-span-2">
+          <legend className="text-[0.9375rem] font-semibold">Live links (optional)</legend>
+          <p className="mt-1 text-[0.8125rem] leading-relaxed text-fg-3">
+            Up to {MAX_LINKS}: the live site, an app store page, a demo. Each must start with https://. Leave the label empty to show the
+            site&rsquo;s address.
+          </p>
+          <ul className="mt-3 space-y-3">
+            {p.links.map((link, i) => (
+              <li key={i} className="grid gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.4fr)_auto] sm:items-end">
+                <Field label={`Label ${i + 1}`}>
+                  {(id) => <input id={id} value={link.label} maxLength={60} placeholder="Live site" onChange={(e) => setLink(i, { label: e.target.value })} className={cn(field, "h-12")} />}
+                </Field>
+                <Field label={`Address ${i + 1}`}>
+                  {(id) => <input id={id} type="url" value={link.href} maxLength={300} placeholder="https://" onChange={(e) => setLink(i, { href: e.target.value })} className={cn(field, "h-12")} />}
+                </Field>
+                <button type="button" onClick={() => set({ links: p.links.filter((_, j) => j !== i) })} className={cn(rowButton, "h-12 justify-center")} aria-label={`Remove link ${i + 1}`}>
+                  <Trash2 className="size-4" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+          {p.links.length < MAX_LINKS ? (
+            <button type="button" onClick={() => set({ links: [...p.links, { label: "", href: "" }] })} className={cn(rowButton, "mt-3")}>
+              <Plus className="size-4" aria-hidden="true" />
+              Add a link
+            </button>
+          ) : null}
+        </fieldset>
 
         <fieldset className="sm:col-span-2">
           <legend className="text-[0.9375rem] font-semibold">Colour of its page</legend>
@@ -296,35 +376,117 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
           </div>
         </fieldset>
 
-        {draft.mode !== "builtIn" ? (
-          <div className="sm:col-span-2">
-            <p className="text-[0.9375rem] font-semibold">Screenshot (optional)</p>
-            <div className="mt-3 flex flex-wrap items-center gap-4">
+        <fieldset className="sm:col-span-2">
+          <legend className="text-[0.9375rem] font-semibold">Photos (optional)</legend>
+          <p className="mt-1 text-[0.8125rem] leading-relaxed text-fg-3">
+            Up to {MAX_IMAGES}. PNG, JPG or WebP, up to 6 MB each.{" "}
+            {draft.mode === "builtIn"
+              ? "They are shown after the screenshots already written into this case study."
+              : "Without any, the project gets a title plate."}
+          </p>
+          <ol className="mt-3 space-y-5">
+            {p.images.map((image, i) => (
+              <li key={image.src} className="grid gap-4 border-2 border-fg p-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
+                {/* eslint-disable-next-line @next/next/no-img-element -- a panel preview of a local file */}
+                <img src={image.src} alt="" className="aspect-[4/3] w-full border border-line bg-paper object-cover object-top" />
+                <div className="grid gap-4">
+                  <Field label={`Describe photo ${i + 1}`} hint="Read aloud by screen readers.">
+                    {(id) => <input id={id} value={image.alt} maxLength={200} onChange={(e) => setImage(i, { alt: e.target.value })} className={cn(field, "h-12")} />}
+                  </Field>
+                  <Field label="Caption" hint="What it shows and when it was taken.">
+                    {(id) => <input id={id} value={image.caption} maxLength={240} onChange={(e) => setImage(i, { caption: e.target.value })} className={cn(field, "h-12")} />}
+                  </Field>
+                  <div className="flex flex-wrap gap-2">
+                    {i > 0 ? (
+                      <button type="button" onClick={() => moveImage(i, -1)} className={rowButton} aria-label={`Move photo ${i + 1} up`}>
+                        <ArrowUp className="size-4" aria-hidden="true" />
+                        Earlier
+                      </button>
+                    ) : null}
+                    {i < p.images.length - 1 ? (
+                      <button type="button" onClick={() => moveImage(i, 1)} className={rowButton} aria-label={`Move photo ${i + 1} down`}>
+                        <ArrowDown className="size-4" aria-hidden="true" />
+                        Later
+                      </button>
+                    ) : null}
+                    <button type="button" onClick={() => set({ images: p.images.filter((_, j) => j !== i) })} className={cn(rowButton, "text-refuse")}>
+                      <Trash2 className="size-4" aria-hidden="true" />
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {p.images.length < MAX_IMAGES ? (
+            <label className={cn("btn btn-ghost mt-4 cursor-pointer", uploading && "pointer-events-none opacity-60")}>
+              {uploading === "image" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <Upload aria-hidden="true" />}
+              Add a photo ({p.images.length} of {MAX_IMAGES})
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) uploadImage(file);
+                }}
+              />
+            </label>
+          ) : null}
+        </fieldset>
+
+        <fieldset className="sm:col-span-2">
+          <legend className="text-[0.9375rem] font-semibold">Video (optional)</legend>
+          <p className="mt-1 text-[0.8125rem] leading-relaxed text-fg-3">
+            One video. Paste a YouTube, Vimeo or Loom link, or upload an MP4 or WebM up to 50 MB. A link keeps the site light; an upload is
+            stored with the site.
+          </p>
+          <div className="mt-3 grid gap-4">
+            <Field label="Video link or uploaded file">
+              {(id) => (
+                <input
+                  id={id}
+                  value={p.video?.src ?? ""}
+                  maxLength={300}
+                  placeholder="https://www.youtube.com/watch?v=…"
+                  onChange={(e) => set({ video: e.target.value ? { src: e.target.value, caption: p.video?.caption ?? "" } : null })}
+                  aria-invalid={Boolean(p.video?.src && !videoEmbed(p.video.src))}
+                  className={cn(field, "h-12")}
+                />
+              )}
+            </Field>
+            {p.video?.src && !videoEmbed(p.video.src) ? (
+              <p className="text-[0.8125rem] font-semibold text-refuse">Not a link the site can play yet. Use a YouTube, Vimeo or Loom link, or an https link ending in .mp4 or .webm.</p>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-4">
               <label className={cn("btn btn-ghost cursor-pointer", uploading && "pointer-events-none opacity-60")}>
-                {uploading ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <Upload aria-hidden="true" />}
-                {p.image ? "Replace image" : "Choose image"}
-                <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+                {uploading === "video" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <Upload aria-hidden="true" />}
+                {isUploadedVideo(p.video?.src) ? "Replace the uploaded video" : "Upload a video file"}
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) uploadVideo(file);
+                  }}
+                />
               </label>
-              {p.image ? (
-                <button type="button" onClick={() => set({ image: null })} className="link text-[0.9375rem]">
-                  Remove image
+              {p.video ? (
+                <button type="button" onClick={() => set({ video: null })} className="link text-[0.9375rem]">
+                  Remove video
                 </button>
               ) : null}
             </div>
-            {p.image ? (
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                <Field label="Describe the image" hint="Read aloud by screen readers.">
-                  {(id) => <input id={id} value={p.image?.alt ?? ""} maxLength={200} onChange={(e) => p.image && set({ image: { ...p.image, alt: e.target.value } })} className={cn(field, "h-12")} />}
-                </Field>
-                <Field label="Caption" hint="What it shows and when it was taken.">
-                  {(id) => <input id={id} value={p.image?.caption ?? ""} maxLength={240} onChange={(e) => p.image && set({ image: { ...p.image, caption: e.target.value } })} className={cn(field, "h-12")} />}
-                </Field>
-              </div>
-            ) : (
-              <p className="mt-3 text-[0.8125rem] leading-relaxed text-fg-3">PNG, JPG or WebP, up to 6 MB. Without one the project gets a title plate.</p>
-            )}
+            {p.video ? (
+              <Field label="Video caption" hint="What it shows, for example: A two-minute walkthrough of the owner dashboard.">
+                {(id) => <input id={id} value={p.video?.caption ?? ""} maxLength={240} onChange={(e) => p.video && set({ video: { ...p.video, caption: e.target.value } })} className={cn(field, "h-12")} />}
+              </Field>
+            ) : null}
           </div>
-        ) : null}
+        </fieldset>
 
         <div className="sm:col-span-2">
           <Toggle checked={p.featured} onChange={(value) => set({ featured: value })} label="Feature on the home page" hint="Gives it a full-width spread on the home page. Otherwise it appears in the work list only." />
@@ -362,14 +524,15 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
 }
 
 /**
- * The site panel. Loads the content store, lets you change it, and saves it back to
- * src/content/store.json through /api/admin. Nothing is saved until "Save changes".
+ * The site panel. Loads the content store, lets you change it, and saves it to Supabase
+ * through /api/admin, which rebuilds the live site. Nothing is saved until "Save changes".
  */
 export function AdminPanel() {
   const [gate, setGate] = useState<Gate>("loading");
   const [gateMessage, setGateMessage] = useState("");
   const [store, setStore] = useState<Store | null>(null);
   const [builtIn, setBuiltIn] = useState<StoredProject[]>([]);
+  const [covers, setCovers] = useState<Record<string, StoredImage | null>>({});
   const [remembered] = useState(readUi);
   const [tab, setTab] = useState<Tab>(remembered.tab);
   const [dirty, setDirty] = useState(false);
@@ -392,15 +555,16 @@ export function AdminPanel() {
       if (response.ok && body.ok) {
         setStore(body.store);
         setBuiltIn(body.builtIn);
+        setCovers(body.covers ?? {});
         setGate("ready");
       } else if (body.code === "signed_out") setGate("signed-out");
       else if (body.code === "no_password") setGate("no-password");
       else {
-        setGateMessage(body.message ?? "The panel could not load the content file.");
+        setGateMessage(body.message ?? "The panel could not load the saved content.");
         setGate("error");
       }
     } catch {
-      setGateMessage("The panel could not reach the local server. Is npm run dev still running?");
+      setGateMessage("The panel could not reach the server. Check your connection and reload.");
       setGate("error");
     }
   }, []);
@@ -434,7 +598,8 @@ export function AdminPanel() {
         <h1 className="t-display max-w-[18ch]">Set a panel password first</h1>
         <p className="t-lead mt-6 max-w-[56ch] text-fg-2">
           Add a line like <code className="font-mono text-[0.9em]">ADMIN_PASSWORD=your-password</code> (at least 8 characters) to the file{" "}
-          <code className="font-mono text-[0.9em]">.env.local</code> in the project folder, then reload this page.
+          <code className="font-mono text-[0.9em]">.env.local</code> in the project folder, then reload this page. On the live site, add it
+          under Environment Variables in the Vercel project settings and redeploy.
         </p>
       </div>
     );
@@ -464,9 +629,12 @@ export function AdminPanel() {
       if (!response.ok || !body.ok) return setNotice({ kind: "error", message: body.message ?? "The changes could not be saved." });
       setStore(body.store);
       setDirty(false);
-      setNotice({ kind: "saved" });
+      setNotice({
+        kind: "saved",
+        message: body.message ?? (body.published ? "Saved. The live site is rebuilding and will show the changes in a minute or two." : "Saved."),
+      });
     } catch {
-      setNotice({ kind: "error", message: "The local server did not answer. Your changes are still here; try saving again." });
+      setNotice({ kind: "error", message: "The server did not answer. Your changes are still here; try saving again." });
     }
   };
 
@@ -480,7 +648,7 @@ export function AdminPanel() {
     ...builtIn.map((original) => ({
       kind: "builtIn" as const,
       slug: original.slug,
-      project: store.overrides[original.slug] ? { ...store.overrides[original.slug], image: original.image } : original,
+      project: store.overrides[original.slug] ?? original,
       hidden: store.hidden.includes(original.slug),
       edited: Boolean(store.overrides[original.slug]),
     })),
@@ -493,7 +661,7 @@ export function AdminPanel() {
     if (!draft) return;
     if (draft.mode === "new") change({ ...store, projects: [...store.projects, project] });
     else if (draft.mode === "custom") change({ ...store, projects: store.projects.map((p) => (p.slug === draft.slug ? project : p)) });
-    else change({ ...store, overrides: { ...store.overrides, [project.slug]: { ...project, image: null } } });
+    else change({ ...store, overrides: { ...store.overrides, [project.slug]: project } });
     setSelected(project.slug);
     setDraft(null);
   };
@@ -507,16 +675,18 @@ export function AdminPanel() {
   const tabs: { id: Tab; label: string }[] = [
     { id: "projects", label: "Projects" },
     { id: "text", label: "Hero and about" },
+    { id: "social", label: "Social links" },
     { id: "motion", label: "Motion" },
   ];
+  const socialProfiles = SOCIALS.filter(({ id }) => /^https:\/\/\S+$/.test(store.social[id])).map(({ id, label }) => ({ id, label, href: store.social[id] }));
 
   return (
     <div className="pb-36 pt-[var(--spacing-header)]">
       <div className="shell border-b-2 border-fg pb-10 pt-12">
         <h1 className="t-display">Site panel</h1>
         <p className="mt-4 max-w-[64ch] leading-relaxed text-fg-2">
-          Changes are written to <code className="font-mono text-[0.9em]">src/content/store.json</code> when you save, and the
-          site updates straight away. Commit that file and deploy to publish them.
+          Changes are saved to the site&apos;s database when you press Save, and the live site rebuilds itself with them,
+          which takes a minute or two.
         </p>
         <div role="tablist" aria-label="Panel sections" className="mt-9 flex flex-wrap gap-2.5">
           {tabs.map((item) => (
@@ -646,7 +816,7 @@ export function AdminPanel() {
                   ) : null}
                 </div>
                 <div className="mt-8">
-                  <ProjectPreview project={current.project} dimmed={current.hidden} />
+                  <ProjectPreview project={current.project} dimmed={current.hidden} cover={current.kind === "builtIn" ? covers[current.slug] : undefined} />
                 </div>
               </section>
             ) : null}
@@ -690,6 +860,59 @@ export function AdminPanel() {
             <Field label="Background paragraph" hint="Leave empty to hide it.">
               {(id) => <textarea id={id} rows={7} value={store.about.background} maxLength={900} onChange={(e) => change({ ...store, about: { ...store.about, background: e.target.value } })} className={cn(field, "py-3 leading-relaxed")} />}
             </Field>
+          </section>
+        </div>
+      ) : null}
+
+      {/* ------------------------------------------------------------------ social */}
+      {tab === "social" ? (
+        <div role="tabpanel" id="panel-social" aria-labelledby="tab-social" className="shell grid gap-x-14 gap-y-14 pt-12 lg:grid-cols-12">
+          <section className="space-y-7 lg:col-span-6" aria-labelledby="social-heading">
+            <h2 id="social-heading" className="t-title">
+              Social links
+            </h2>
+            <p className="leading-relaxed text-fg-2">
+              Paste the full address of each profile. An icon appears in the footer, on the contact page and on the e-invoicing page
+              as soon as its link is saved. Leave a box empty to hide that icon.
+            </p>
+            {SOCIALS.map(({ id, label }) => {
+              const value = store.social[id];
+              const invalid = Boolean(value) && !/^https:\/\/\S+$/.test(value.trim());
+              return (
+                <Field key={id} label={label} hint={invalid ? undefined : "Must start with https://"}>
+                  {(fieldId) => (
+                    <>
+                      <input
+                        id={fieldId}
+                        type="url"
+                        value={value}
+                        maxLength={300}
+                        placeholder="https://"
+                        aria-invalid={invalid}
+                        onChange={(e) => change({ ...store, social: { ...store.social, [id]: e.target.value } })}
+                        className={cn(field, "h-12")}
+                      />
+                      {invalid ? <p className="mt-2 text-[0.8125rem] font-semibold text-refuse">This needs to start with https:// or it will not be saved.</p> : null}
+                    </>
+                  )}
+                </Field>
+              );
+            })}
+          </section>
+          <section className="lg:col-span-6" aria-labelledby="social-preview-heading">
+            <div className="lg:sticky lg:top-[calc(var(--spacing-header)+2rem)]">
+              <h2 id="social-preview-heading" className="t-title">
+                Preview
+              </h2>
+              <div data-surface="ink" className="mt-5 border-2 border-ink p-6">
+                <p className="t-data text-fg-3">Footer</p>
+                {socialProfiles.length > 0 ? (
+                  <SocialLinks profiles={socialProfiles} className="mt-4" />
+                ) : (
+                  <p className="mt-4 text-fg-2">No icons yet. Add a link to show one.</p>
+                )}
+              </div>
+            </div>
           </section>
         </div>
       ) : null}
@@ -743,7 +966,7 @@ export function AdminPanel() {
         <div className="shell flex min-h-[4.5rem] flex-wrap items-center justify-between gap-x-6 gap-y-3 py-3.5">
           <p role="status" aria-live="polite" className="text-[0.9375rem]">
             {notice.kind === "saving" ? "Saving" : null}
-            {notice.kind === "saved" ? "Saved. The site has been updated." : null}
+            {notice.kind === "saved" ? notice.message : null}
             {notice.kind === "error" ? <span className="text-refuse">{notice.message}</span> : null}
             {notice.kind === "idle" ? (dirty ? "You have unsaved changes." : "Everything is saved.") : null}
           </p>

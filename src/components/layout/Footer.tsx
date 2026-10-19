@@ -1,17 +1,14 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { navigation } from "@/config/navigation";
-import { mailto, site } from "@/config/site";
+import { mailto, site, socialProfiles } from "@/config/site";
 import { featuredProjects } from "@/content/projects";
 import { Logo } from "@/components/brand/Logo";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 import { BackToTop } from "./BackToTop";
 
 export function Footer() {
-  const external = [
-    { label: "GitHub", href: site.links.github as string | null },
-    { label: "LinkedIn", href: site.links.linkedin },
-    { label: "Résumé", href: site.links.resume },
-  ].filter((link): link is { label: string; href: string } => Boolean(link.href));
+  const external = site.resume ? [{ label: "Résumé", href: site.resume }] : [];
 
   return (
     <footer data-surface="ink">
@@ -25,6 +22,7 @@ export function Footer() {
           <a href={mailto()} className="link mt-8 inline-block break-all text-[1.0625rem]">
             {site.email}
           </a>
+          <SocialLinks profiles={socialProfiles} className="mt-6" />
         </div>
 
         <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-7">
@@ -65,7 +63,7 @@ export function Footer() {
           <div>
             <h2 className="t-data text-fg-3">Elsewhere</h2>
             <ul className="mt-4 space-y-2.5 pointer-coarse:mt-2 pointer-coarse:space-y-0">
-              {external.map((link) => (
+              {[...socialProfiles, ...external].map((link) => (
                 <li key={link.label}>
                   <a href={link.href} target="_blank" rel="noopener noreferrer" className="link-quiet inline-flex items-center gap-1.5 pointer-coarse:min-h-11">
                     {link.label}
