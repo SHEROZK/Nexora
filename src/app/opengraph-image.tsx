@@ -1,14 +1,13 @@
 import { site } from "@/config/site";
-import { ogCard, ogContentType, ogSize } from "@/lib/og";
+import { ogBrandCard, ogContentType, ogSize } from "@/lib/og";
 
-export const alt = `${site.name}: full-stack development and AI engineering in Dubai`;
+export const alt = `${site.name} logo: full-stack development and AI engineering in Dubai`;
 export const size = ogSize;
 export const contentType = ogContentType;
 
 export default function OpengraphImage() {
-  return ogCard({
-    title: "Rough ideas in. Built software out.",
-    subtitle: `${site.title} · ${site.positioning}`,
+  return ogBrandCard({
+    subtitle: `${site.title} · AI Engineering`,
     detail: site.availability.open ? site.availability.label : site.availability.closedLabel,
   });
 }

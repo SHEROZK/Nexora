@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { MARK, brand } from "@/config/brand";
+import { MARK, WORDMARK, brand } from "@/config/brand";
 import { site } from "@/config/site";
 
 export const ogSize = { width: 1200, height: 630 };
@@ -80,6 +80,70 @@ export function ogCard({ title, subtitle, detail }: Card) {
             paddingTop: 28,
             fontSize: 24,
             color: "#1c1b22",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ width: 12, height: 12, borderRadius: 999, background: "#9f4a34", marginRight: 16 }} />
+            {detail}
+          </div>
+          <div style={{ display: "flex" }}>{site.location}</div>
+        </div>
+      </div>
+    ),
+    ogSize,
+  );
+}
+
+function Mark({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox={MARK.viewBox}>
+      {MARK.stems.map((stem) => (
+        <rect key={stem.x} x={stem.x} y={stem.y} width={stem.width} height={stem.height} fill="#1c1b22" />
+      ))}
+      {MARK.steps.map((step) => (
+        <rect key={step.x} x={step.x} y={step.y} width={step.width} height={step.height} fill={step.fill} />
+      ))}
+    </svg>
+  );
+}
+
+/**
+ * The home page preview: the logo large and centred. WhatsApp, iMessage and others often show
+ * only a square thumbnail cut from the middle of the image, so the mark and the name sit there.
+ */
+export function ogBrandCard({ subtitle, detail }: Pick<Card, "subtitle" | "detail">) {
+  const wordmarkWidth = 470;
+  const [, , vw, vh] = WORDMARK.viewBox.split(" ").map(Number);
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          background: "#ece7dd",
+          color: "#1c1b22",
+          padding: "64px 72px 48px",
+        }}
+      >
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <Mark size={190} />
+          <svg width={wordmarkWidth} height={Math.round((wordmarkWidth * vh) / vw)} viewBox={WORDMARK.viewBox} style={{ marginTop: 40 }}>
+            <path d={WORDMARK.d} fill="#1c1b22" fillRule="evenodd" />
+          </svg>
+          <div style={{ display: "flex", marginTop: 30, fontSize: 30, color: "#2c3b63", letterSpacing: -0.5 }}>{subtitle}</div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderTop: "3px solid #1c1b22",
+            paddingTop: 24,
+            fontSize: 24,
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
