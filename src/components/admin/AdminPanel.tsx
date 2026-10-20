@@ -77,6 +77,7 @@ const blank: StoredProject = {
   overview: [],
   points: [],
   images: [],
+  cover: "",
   video: null,
 };
 
@@ -163,11 +164,30 @@ function SignIn({ onDone }: { onDone: () => void }) {
   );
 }
 
+/** The picture a project leads with: the one picked as main, or else its first. */
+function mainPicture(written: StoredImage[], project: StoredProject) {
+  const all = [...written, ...project.images];
+  return all.find((image) => image.src === project.cover) ?? all[0] ?? null;
+}
+
+function MainButton({ main, label, onClick }: { main: boolean; label: string; onClick: () => void }) {
+  return main ? (
+    <span className={cn(rowButton, "pointer-events-none bg-fg text-surface")}>
+      <Check className="size-4" aria-hidden="true" />
+      Main picture
+    </span>
+  ) : (
+    <button type="button" onClick={onClick} className={rowButton} aria-label={`Make ${label} the main picture`}>
+      Make main
+    </button>
+  );
+}
+
 /** The project form, used for a new project, one you added, and edits to the originals. */
 function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onReset }: {
   draft: Draft;
-  /** True when an original case study has screenshots written into it, which come before the photos added here. */
-  written: boolean;
+  /** The screenshots written into an original case study. They come before the photos added here. */
+  written: StoredImage[];
   taken: (slug: string) => boolean;
   onChange: (project: StoredProject) => void;
   onCommit: (project: StoredProject) => void;
@@ -262,7 +282,7 @@ function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onRe
     [images[index], images[index + by]] = [images[index + by], images[index]];
     set({ images });
   };
-  const makeMain = (index: number) => set({ images: [p.images[index], ...p.images.filter((_, i) => i !== index)] });
+  const main = mainPicture(written, p)?.src;
   const setLink = (index: number, patch: Partial<StoredLink>) => set({ links: p.links.map((link, i) => (i === index ? { ...link, ...patch } : link)) });
 
   return (
@@ -383,10 +403,22 @@ function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onRe
           <legend className="text-[0.9375rem] font-semibold">Photos (optional)</legend>
           <p className="mt-1 text-[0.8125rem] leading-relaxed text-fg-3">
             Up to {MAX_IMAGES}. PNG, JPG or WebP, up to 6 MB each.{" "}
-            {written
-              ? "They are shown after the screenshots already written into this case study."
-              : "The main photo is the one shown on the home page and the work list. Without any, the project gets a diagram or title plate."}
+            The main picture is the one shown on the home page, in the work list and first on its page.{" "}
+            {written.length > 0
+              ? "Added photos come after the screenshots already written into this case study."
+              : "Without any, the project gets a diagram or title plate."}
           </p>
+          {written.length > 0 ? (
+            <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Screenshots written into this case study">
+              {written.map((image) => (
+                <li key={image.src} className="grid content-start gap-2 border-2 border-fg p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- a panel preview of a local file */}
+                  <img src={image.src} alt="" className="aspect-[4/3] w-full border border-line bg-paper object-cover object-top" />
+                  <MainButton main={main === image.src} label={image.alt} onClick={() => set({ cover: image.src })} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <ol className="mt-3 space-y-5">
             {p.images.map((image, i) => (
               <li key={image.src} className="grid gap-4 border-2 border-fg p-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
@@ -400,16 +432,7 @@ function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onRe
                     {(id) => <input id={id} value={image.caption} maxLength={240} onChange={(e) => setImage(i, { caption: e.target.value })} className={cn(field, "h-12")} />}
                   </Field>
                   <div className="flex flex-wrap gap-2">
-                    {written ? null : i === 0 ? (
-                      <span className={cn(rowButton, "pointer-events-none bg-fg text-surface")}>
-                        <Check className="size-4" aria-hidden="true" />
-                        Main photo
-                      </span>
-                    ) : (
-                      <button type="button" onClick={() => makeMain(i)} className={rowButton} aria-label={`Make photo ${i + 1} the main photo`}>
-                        Make main
-                      </button>
-                    )}
+                    <MainButton main={main === image.src} label={`photo ${i + 1}`} onClick={() => set({ cover: image.src })} />
                     {i > 0 ? (
                       <button type="button" onClick={() => moveImage(i, -1)} className={rowButton} aria-label={`Move photo ${i + 1} up`}>
                         <ArrowUp className="size-4" aria-hidden="true" />
@@ -545,7 +568,7 @@ export function AdminPanel() {
   const [gateMessage, setGateMessage] = useState("");
   const [store, setStore] = useState<Store | null>(null);
   const [builtIn, setBuiltIn] = useState<StoredProject[]>([]);
-  const [covers, setCovers] = useState<Record<string, StoredImage | null>>({});
+  const [written, setWritten] = useState<Record<string, StoredImage[]>>({});
   const [remembered] = useState(readUi);
   const [tab, setTab] = useState<Tab>(remembered.tab);
   const [dirty, setDirty] = useState(false);
@@ -568,7 +591,7 @@ export function AdminPanel() {
       if (response.ok && body.ok) {
         setStore(body.store);
         setBuiltIn(body.builtIn);
-        setCovers(body.covers ?? {});
+        setWritten(body.written ?? {});
         setGate("ready");
       } else if (body.code === "signed_out") setGate("signed-out");
       else if (body.code === "no_password") setGate("no-password");
@@ -766,7 +789,7 @@ export function AdminPanel() {
               <ProjectForm
                 key={`${draft.mode}-${draft.slug ?? "new"}`}
                 draft={draft}
-                written={draft.mode === "builtIn" && !!draft.slug && !!covers[draft.slug]}
+                written={draft.mode === "builtIn" && draft.slug ? (written[draft.slug] ?? []) : []}
                 taken={taken}
                 onChange={(project) => setDraft({ ...draft, project })}
                 onCommit={commit}
@@ -830,7 +853,7 @@ export function AdminPanel() {
                   ) : null}
                 </div>
                 <div className="mt-8">
-                  <ProjectPreview project={current.project} dimmed={current.hidden} cover={current.kind === "builtIn" ? covers[current.slug] : undefined} />
+                  <ProjectPreview project={current.project} dimmed={current.hidden} written={current.kind === "builtIn" ? written[current.slug] : undefined} />
                 </div>
               </section>
             ) : null}

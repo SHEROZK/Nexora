@@ -82,6 +82,11 @@ export interface StoredProject {
    * original case studies they are shown after the screenshots already written into it.
    */
   images: StoredImage[];
+  /**
+   * The picture shown first: on the home page, in the work list and at the top of the case
+   * study. Any of its pictures, written or added; empty keeps the usual order.
+   */
+  cover: string;
   video: StoredVideo | null;
 }
 
@@ -143,7 +148,7 @@ export const MOTION_HELP = {
   },
   speed: { label: "Animation speed", options: { slow: "Slow and calm", normal: "Normal", fast: "Quick" } },
   smoothScroll: { label: "Smooth scrolling", hint: "Eases mouse-wheel scrolling. Never applied on touch screens." },
-  drift: { label: "Parallax drift", hint: "Large numbers, the film strip and the moving line of type slide against the scroll." },
+  drift: { label: "Parallax drift", hint: "Large numbers, the phone screenshot and the moving line of type slide against the scroll." },
   flowField: { label: "Generative canvas in the lab", hint: "Off shows a single still frame instead." },
   magnetic: { label: "Magnetic buttons", hint: "Main buttons lean slightly toward the mouse." },
 } as const;
@@ -237,6 +242,7 @@ function cleanProject(value: unknown, forcedSlug?: string): StoredProject | null
     overview: lines(p.overview, 8, 900),
     points: lines(p.points, 12, 300),
     images: cleanImages(p),
+    cover: isUploadedImage(text(p.cover, 300)) ? text(p.cover, 300) : "",
     video: cleanVideo(p.video),
   };
 }

@@ -13,14 +13,16 @@ const GROUP_LABELS: Record<StoredProject["group"], string> = {
  * same colour tokens and type styles the real pages use. The top block is its colour
  * spread (home page and case-study header); the bottom strip is its row in the work list.
  */
-export function ProjectPreview({ project, dimmed, cover }: { project: StoredProject; dimmed?: boolean; cover?: StoredImage | null }) {
+export function ProjectPreview({ project, dimmed, written = [] }: { project: StoredProject; dimmed?: boolean; written?: StoredImage[] }) {
   const title = project.title.trim() || "Project name";
   const stack = project.stack.filter(Boolean).slice(0, 4);
-  // An original case study keeps its written screenshots; the first one stands in for the picture.
-  const picture = cover ?? project.images[0] ?? null;
+  // An original case study keeps its written screenshots; any of them, or an added photo, can be the main one.
+  const pictures = [...written, ...project.images];
+  const picture = pictures.find((image) => image.src === project.cover) ?? pictures[0] ?? null;
+  const added = written.length > 0;
   const count = (n: number, one: string, many: string) => (n > 0 ? `${n} ${n === 1 ? one : many}` : null);
   const extras = [
-    count(project.images.length, cover ? "added photo" : "photo", cover ? "added photos" : "photos"),
+    count(project.images.length, added ? "added photo" : "photo", added ? "added photos" : "photos"),
     project.video ? "a video" : null,
     count(project.links.filter((link) => link.href).length, "live link", "live links"),
   ].filter(Boolean);

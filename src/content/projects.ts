@@ -1064,6 +1064,12 @@ function linkLabel(link: StoredLink) {
   }
 }
 
+/** The pictures with the chosen main one moved to the front. An unknown choice leaves the order alone. */
+function coverFirst<T extends { src: string }>(images: T[], cover: string): T[] {
+  const main = images.find((image) => image.src === cover);
+  return main ? [main, ...images.filter((image) => image !== main)] : images;
+}
+
 function fromStore(p: StoredProject): Project {
   return {
     slug: p.slug,
@@ -1078,7 +1084,7 @@ function fromStore(p: StoredProject): Project {
     stack: p.stack,
     visual: "plate",
     surface: p.surface,
-    images: p.images,
+    images: coverFirst(p.images, p.cover),
     video: p.video ?? undefined,
     links: p.links.map((link) => ({ label: linkLabel(link), href: link.href })),
     facts: [],
@@ -1121,6 +1127,7 @@ export function toStored(project: Project): StoredProject {
     overview: project.overview,
     points: project.contribution,
     images: [],
+    cover: "",
     video: project.video ?? null,
   };
 }
@@ -1143,7 +1150,7 @@ function withOverride(project: Project): Project {
     surface: edit.surface,
     // The panel starts from the written links, so the edited list replaces them. A note survives on a link kept unchanged.
     links: edit.links.map((link) => ({ label: linkLabel(link), href: link.href, note: project.links.find((written) => written.href === link.href)?.note })),
-    images: [...project.images, ...edit.images],
+    images: coverFirst([...project.images, ...edit.images], edit.cover),
     video: edit.video ?? project.video,
     overview: edit.overview.length > 0 ? edit.overview : project.overview,
     contribution: edit.points.length > 0 ? edit.points : project.contribution,

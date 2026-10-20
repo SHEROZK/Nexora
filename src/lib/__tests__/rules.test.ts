@@ -224,6 +224,14 @@ describe("content store", () => {
     expect(project.images.map((item) => item.src)).toEqual(["/shots/p-1.png", "/shots/p-2.png", "/shots/p-3.png"]);
   });
 
+  it("keeps a main picture only when it names a site image", () => {
+    const cover = (value: unknown) => sanitizeStore({ projects: [{ title: "C", cover: value }] }).projects[0].cover;
+    expect(cover("/shots/ffl-menu.webp")).toBe("/shots/ffl-menu.webp");
+    expect(cover("https://evil.example/x.png")).toBe("");
+    expect(cover("/shots/../secret.png")).toBe("");
+    expect(cover(undefined)).toBe("");
+  });
+
   it("keeps only video addresses the site can play", () => {
     const video = (src: string) => sanitizeStore({ projects: [{ title: "V", video: { src, caption: "Demo" } }] }).projects[0].video;
     expect(video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toEqual({ src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", caption: "Demo" });

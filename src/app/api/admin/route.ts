@@ -49,8 +49,8 @@ export async function GET(request: Request) {
     store: sanitizeStore(saved, builtInSlugs),
     // The original case studies as written, in the flat shape the panel edits.
     builtIn: builtInProjects.map(toStored),
-    // Their first written screenshot, for the panel's preview. Not editable there.
-    covers: Object.fromEntries(builtInProjects.map((project) => [project.slug, project.images[0] ?? null])),
+    // Their written screenshots. The panel can pick one as the main picture but not change them.
+    written: Object.fromEntries(builtInProjects.map((project) => [project.slug, project.images])),
   });
 }
 
