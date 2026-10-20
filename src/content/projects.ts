@@ -334,15 +334,7 @@ export const builtInProjects: Project[] = [
     ],
     visual: "beds",
     surface: "cobalt",
-    images: [
-      {
-        src: "/shots/pg-owner-dashboard.webp",
-        width: 1700,
-        height: 1180,
-        alt: "The PG India owner dashboard: a greeting, a trust score, visit requests awaiting action and a money overview.",
-        caption: "Owner dashboard in a development build. The names and figures are seeded test data.",
-      },
-    ],
+    images: [],
     links: [],
     facts: [
       { label: "Surface", value: "68 pages, 46 API route handlers" },
@@ -695,15 +687,7 @@ export const builtInProjects: Project[] = [
     ],
     visual: "listings",
     surface: "red",
-    images: [
-      {
-        src: "/shots/ventureworld-gate.webp",
-        width: 820,
-        height: 520,
-        alt: "A password prompt titled Site Access over a darkened page.",
-        caption: "What the public sees today: the site password gate, captured 13 October 2026.",
-      },
-    ],
+    images: [],
     links: [
       {
         label: "ventureworld.net",

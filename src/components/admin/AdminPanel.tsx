@@ -164,8 +164,10 @@ function SignIn({ onDone }: { onDone: () => void }) {
 }
 
 /** The project form, used for a new project, one you added, and edits to the originals. */
-function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
+function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onReset }: {
   draft: Draft;
+  /** True when an original case study has screenshots written into it, which come before the photos added here. */
+  written: boolean;
   taken: (slug: string) => boolean;
   onChange: (project: StoredProject) => void;
   onCommit: (project: StoredProject) => void;
@@ -260,6 +262,7 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
     [images[index], images[index + by]] = [images[index + by], images[index]];
     set({ images });
   };
+  const makeMain = (index: number) => set({ images: [p.images[index], ...p.images.filter((_, i) => i !== index)] });
   const setLink = (index: number, patch: Partial<StoredLink>) => set({ links: p.links.map((link, i) => (i === index ? { ...link, ...patch } : link)) });
 
   return (
@@ -380,9 +383,9 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
           <legend className="text-[0.9375rem] font-semibold">Photos (optional)</legend>
           <p className="mt-1 text-[0.8125rem] leading-relaxed text-fg-3">
             Up to {MAX_IMAGES}. PNG, JPG or WebP, up to 6 MB each.{" "}
-            {draft.mode === "builtIn"
+            {written
               ? "They are shown after the screenshots already written into this case study."
-              : "Without any, the project gets a title plate."}
+              : "The main photo is the one shown on the home page and the work list. Without any, the project gets a diagram or title plate."}
           </p>
           <ol className="mt-3 space-y-5">
             {p.images.map((image, i) => (
@@ -397,6 +400,16 @@ function ProjectForm({ draft, taken, onChange, onCommit, onCancel, onReset }: {
                     {(id) => <input id={id} value={image.caption} maxLength={240} onChange={(e) => setImage(i, { caption: e.target.value })} className={cn(field, "h-12")} />}
                   </Field>
                   <div className="flex flex-wrap gap-2">
+                    {written ? null : i === 0 ? (
+                      <span className={cn(rowButton, "pointer-events-none bg-fg text-surface")}>
+                        <Check className="size-4" aria-hidden="true" />
+                        Main photo
+                      </span>
+                    ) : (
+                      <button type="button" onClick={() => makeMain(i)} className={rowButton} aria-label={`Make photo ${i + 1} the main photo`}>
+                        Make main
+                      </button>
+                    )}
                     {i > 0 ? (
                       <button type="button" onClick={() => moveImage(i, -1)} className={rowButton} aria-label={`Move photo ${i + 1} up`}>
                         <ArrowUp className="size-4" aria-hidden="true" />
@@ -753,6 +766,7 @@ export function AdminPanel() {
               <ProjectForm
                 key={`${draft.mode}-${draft.slug ?? "new"}`}
                 draft={draft}
+                written={draft.mode === "builtIn" && !!draft.slug && !!covers[draft.slug]}
                 taken={taken}
                 onChange={(project) => setDraft({ ...draft, project })}
                 onCommit={commit}

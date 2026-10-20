@@ -65,7 +65,7 @@ function CaseLink({ project }: { project: Project }) {
   );
 }
 
-/** 01. Yellow. The live storefront, huge, running off the right edge, opened through a circle. */
+/** 01. Yellow. The live storefront, huge, opened through a circle. */
 function FoodForLess({ project, number }: SpreadProps) {
   const [storefront, phone] = project.images;
   return (
@@ -73,7 +73,7 @@ function FoodForLess({ project, number }: SpreadProps) {
       <Numeral outline className="-right-[3vw] -top-[4vw]">
         {number}
       </Numeral>
-      <div className="shell relative grid gap-x-12 gap-y-14 md:grid-cols-12 md:items-end">
+      <div className="shell relative grid gap-x-12 gap-y-14 md:grid-cols-12 md:items-end xl:gap-x-20 3xl:gap-x-28">
         <div className="md:col-span-5 lg:col-span-4">
           <h3 className="t-display" data-reveal="rise">
             {project.title}
@@ -88,7 +88,7 @@ function FoodForLess({ project, number }: SpreadProps) {
         </div>
 
         <div className="relative md:col-span-7 md:col-start-6 lg:col-span-8 lg:col-start-5">
-          <RevealMedia mask="circle" className="md:-mr-[calc(var(--spacing-gutter)+7vw)]">
+          <RevealMedia mask="circle">
             <Shot image={storefront} sizes="(min-width: 768px) 68vw, 100vw" />
           </RevealMedia>
           <Drift y={18} className="absolute -bottom-[10%] left-[5%] w-[24%] md:w-[19%]">
@@ -106,16 +106,22 @@ function PgIndia({ project, number }: SpreadProps) {
   const [dashboard] = project.images;
   return (
     <article data-surface="paper" className="relative overflow-hidden py-[var(--spacing-section)]">
-      <div className="shell relative grid gap-x-12 gap-y-24 lg:grid-cols-12 lg:gap-y-14">
+      <div className="shell relative grid gap-x-12 gap-y-24 lg:grid-cols-12 lg:gap-y-14 xl:gap-x-20 3xl:gap-x-28">
         <div className="relative lg:col-span-8">
           <div className="absolute -left-[var(--spacing-gutter)] bottom-[-7%] top-[14%] w-[82%] bg-cobalt" aria-hidden="true" />
           <Drift y={-22} aria-hidden className="pointer-events-none absolute -top-[6vw] right-[4%] z-10 select-none md:right-[9%]">
             <span className="t-giant block text-[min(17vw,27svh)] text-red">{number}</span>
           </Drift>
           <RevealMedia mask="left" className="relative mt-[10%] w-[94%] md:ml-[6%]">
-            <Shot image={dashboard} sizes="(min-width: 1024px) 60vw, 94vw" />
+            {dashboard ? (
+              <Shot image={dashboard} sizes="(min-width: 1024px) 60vw, 94vw" />
+            ) : (
+              <div data-surface="paper" className="aspect-[16/10] border-2 border-ink">
+                <ProjectVisual project={project} />
+              </div>
+            )}
           </RevealMedia>
-          <p className="t-data relative mt-4 max-w-[66%] text-paper md:ml-[6%]">Fig. 3: {dashboard.caption}</p>
+          {dashboard?.caption ? <p className="t-data relative mt-4 max-w-[66%] text-paper md:ml-[6%]">Fig. 3: {dashboard.caption}</p> : null}
         </div>
 
         <div className="max-w-2xl lg:col-span-4 lg:max-w-none lg:pt-[8%]">
@@ -176,7 +182,7 @@ function VideoDirector({ project, number }: SpreadProps) {
         <p className="shell t-data mt-4 text-fg-2">Fig. 4: {sheet.caption}</p>
       </div>
 
-      <div className="shell relative mt-14 grid gap-x-8 gap-y-12 md:mt-20 md:grid-cols-12 md:items-end">
+      <div className="shell relative mt-14 grid gap-x-8 gap-y-12 md:mt-20 md:grid-cols-12 md:items-end xl:gap-x-14 3xl:gap-x-20">
         <RevealMedia mask="up" className="w-[62%] md:col-span-4 md:w-full lg:col-span-3">
           <div style={{ transform: "rotate(-3deg)" }}>
             <Shot image={page} sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 62vw" />
@@ -202,7 +208,7 @@ function VideoDirector({ project, number }: SpreadProps) {
   );
 }
 
-/** 04. Vermilion. The honest picture (a password gate) cut on the diagonal, next to how listings are reviewed. */
+/** 04. Vermilion. Its main photo, if it has one, cut on the diagonal, next to how listings are reviewed. */
 function VentureWorld({ project, number }: SpreadProps) {
   const [gate] = project.images;
   return (
@@ -210,7 +216,7 @@ function VentureWorld({ project, number }: SpreadProps) {
       <Numeral outline className="-bottom-[10vw] -right-[2vw]">
         {number}
       </Numeral>
-      <div className="shell relative grid gap-x-12 gap-y-14 md:grid-cols-12">
+      <div className="shell relative grid gap-x-12 gap-y-14 md:grid-cols-12 xl:gap-x-20 3xl:gap-x-28">
         <div className="md:col-span-6">
           <h3 className="t-display" data-reveal="rise">
             {project.title}
@@ -225,12 +231,16 @@ function VentureWorld({ project, number }: SpreadProps) {
         </div>
 
         <div className="relative md:col-span-6">
-          <p className="t-data mb-3 md:ml-[30%]">Fig. 7: {gate.caption}</p>
-          <RevealMedia mask="diagonal" className="md:ml-[30%]">
-            <Shot image={gate} sizes="(min-width: 768px) 34vw, 100vw" />
-          </RevealMedia>
+          {gate ? (
+            <>
+              {gate.caption ? <p className="t-data mb-3 md:ml-[30%]">Fig. 7: {gate.caption}</p> : null}
+              <RevealMedia mask="diagonal" className="md:ml-[30%]">
+                <Shot image={gate} sizes="(min-width: 768px) 34vw, 100vw" />
+              </RevealMedia>
+            </>
+          ) : null}
 
-          <figure data-surface="paper" className="relative mt-8 border-2 border-ink md:mt-[-9%] md:w-[82%]">
+          <figure data-surface="paper" className={cn("relative border-2 border-ink", gate ? "mt-8 md:mt-[-9%] md:w-[82%]" : "md:mt-[8%]")}>
             <div className="aspect-[16/10]">
               <ProjectVisual project={project} />
             </div>
@@ -250,7 +260,7 @@ function Generic({ project, number }: SpreadProps) {
       <Numeral outline className="-right-[2vw] -top-[3vw]">
         {number}
       </Numeral>
-      <div className="shell relative grid gap-x-12 gap-y-14 md:grid-cols-12 md:items-end">
+      <div className="shell relative grid gap-x-12 gap-y-14 md:grid-cols-12 md:items-end xl:gap-x-20 3xl:gap-x-28">
         <div className="md:col-span-5">
           <h3 className="t-display" data-reveal="rise">
             {project.title}
