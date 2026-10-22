@@ -51,3 +51,7 @@ AGENTS.md
 CLAUDE.md
 design/
 portfolio.png
+
+.vercel
+.env*
+!.env.example
