@@ -14,6 +14,7 @@ import { Status } from "@/components/ui/Status";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
 import { cn } from "@/lib/cn";
 import { breadcrumbSchema, pageMetadata, projectSchema } from "@/lib/seo";
+import { alt as caseStudyCardAlt } from "./opengraph-image";
 import { JsonLd } from "@/components/seo/JsonLd";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -31,6 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: project.summary,
     path: `/work/${project.slug}`,
     type: "article",
+    image: { url: `/work/${project.slug}/opengraph-image`, alt: caseStudyCardAlt },
   });
 }
 

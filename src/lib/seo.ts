@@ -21,20 +21,34 @@ interface PageMeta {
   /** Path from the root, e.g. "/about". */
   path: string;
   type?: "website" | "article" | "profile";
+  /** The page's own preview card, e.g. a case study's. Defaults to the logo card. */
+  image?: { url: string; alt: string };
 }
+
+/**
+ * The logo card from app/opengraph-image.tsx. Setting openGraph on a page replaces the layout's
+ * openGraph whole, image included, so every page names its preview image again.
+ */
+const brandCard = {
+  url: "/opengraph-image",
+  width: 1200,
+  height: 630,
+  alt: `${site.name} logo: full-stack development and AI engineering in Dubai`,
+};
 
 /**
  * Metadata for one page. Next.js merges metadata shallowly, so a page that sets only a title
  * would inherit the home page's Open Graph title, description and URL, and every shared link
  * would preview as the home page. This sets all three places (page, Open Graph, Twitter) together.
  */
-export function pageMetadata({ title, description, path, type = "website" }: PageMeta): Metadata {
+export function pageMetadata({ title, description, path, type = "website", image }: PageMeta): Metadata {
+  const card = image ? { ...brandCard, ...image } : brandCard;
   return {
     title,
     description,
     alternates: { canonical: path },
-    openGraph: { type, siteName: site.name, locale: "en_US", title, description, url: path },
-    twitter: { card: "summary_large_image", title, description },
+    openGraph: { type, siteName: site.name, locale: "en_US", title, description, url: path, images: [card] },
+    twitter: { card: "summary_large_image", title, description, images: [card] },
   };
 }
 
