@@ -83,14 +83,14 @@ function CaseLink({ project }: { project: Project }) {
   );
 }
 
-/** 01. Yellow. The live storefront, huge, opened through a circle. */
+/** 01. Yellow, or the colour picked in the panel. The live storefront, huge, opened through a circle. */
 function FoodForLess({ project, number }: SpreadProps) {
   // The main picture fills the frame; the first phone-shaped one after it sits over its corner.
   const [storefront, ...rest] = project.images;
   if (!storefront || isStrip(storefront)) return <Generic project={project} number={number} />;
   const phone = phoneFor(project, storefront) ?? (isTall(storefront) ? undefined : rest.find(isTall));
   return (
-    <article data-surface="yellow" className="relative overflow-hidden py-[var(--spacing-section)]">
+    <article data-surface={project.surface} className="relative overflow-hidden py-[var(--spacing-section)]">
       <Numeral outline className="right-[var(--spacing-gutter)] top-[2vw]">
         {number}
       </Numeral>
@@ -120,17 +120,17 @@ function FoodForLess({ project, number }: SpreadProps) {
   );
 }
 
-/** 02. Paper with a cobalt slab. The dashboard beside a specification sheet, like a property listing. */
+/** 02. Its own colour with a cobalt slab behind the picture (charcoal when the colour is navy). The dashboard beside a specification sheet, like a property listing. */
 function PgIndia({ project, number }: SpreadProps) {
   const [dashboard] = project.images;
   const phone = phoneFor(project, dashboard);
   return (
-    <article data-surface="paper" className="relative overflow-hidden py-[var(--spacing-section)]">
+    <article data-surface={project.surface} className="relative overflow-hidden py-[var(--spacing-section)]">
       <div className="shell relative grid gap-x-12 gap-y-24 lg:grid-cols-12 lg:gap-y-14 xl:gap-x-20 3xl:gap-x-28">
         <div className="relative lg:col-span-8">
-          <div className="absolute -left-[var(--spacing-gutter)] bottom-[-7%] top-[14%] w-[82%] bg-cobalt" aria-hidden="true" />
+          <div className={cn("absolute -left-[var(--spacing-gutter)] bottom-[-7%] top-[14%] w-[82%]", project.surface === "cobalt" ? "bg-ink" : "bg-cobalt")} aria-hidden="true" />
           <Drift y={-22} aria-hidden className="pointer-events-none absolute -top-[6vw] right-[4%] z-10 select-none md:right-[9%]">
-            <span className="t-giant block text-[min(17vw,27svh)] text-red">{number}</span>
+            <span className={cn("t-giant block text-[min(17vw,27svh)]", project.surface === "red" ? "text-yellow" : "text-red")}>{number}</span>
           </Drift>
           <RevealMedia mask="left" className="relative mt-[10%] w-[94%] md:ml-[6%]">
             {dashboard ? (
@@ -177,13 +177,13 @@ function PgIndia({ project, number }: SpreadProps) {
   );
 }
 
-/** 03. Ink. A strip of real frames from a generated clip runs the full width and moves sideways with the scroll. */
+/** 03. Ink, or the colour picked in the panel. A strip of real frames from a generated clip runs the full width and moves sideways with the scroll. */
 function VideoDirector({ project, number }: SpreadProps) {
   // A panoramic strip runs the width; the first ordinary picture (the main one, if picked) stands beside the diagram.
   const sheet = project.images.find(isStrip);
   const page = project.images.find((image) => !isStrip(image));
   return (
-    <article data-surface="ink" className="relative overflow-hidden py-[var(--spacing-section)]">
+    <article data-surface={project.surface} className="relative overflow-hidden py-[var(--spacing-section)]">
       <Numeral className="right-[var(--spacing-gutter)] top-[2vw] text-accent md:left-[var(--spacing-gutter)] md:right-auto md:top-[6vw]">{number}</Numeral>
 
       <div className="shell relative grid gap-x-8 gap-y-8 md:grid-cols-12">
@@ -198,7 +198,7 @@ function VideoDirector({ project, number }: SpreadProps) {
       {/* The film strip: one image, six frames. It fits the screen; on a phone it scrolls sideways instead of shrinking. */}
       {sheet ? (
         <div className="relative mt-14 md:mt-20">
-          <div className="overflow-x-auto border-y-2 border-paper" tabIndex={0} role="group" aria-label={`${sheet.alt} Scroll sideways to see all of it.`}>
+          <div className="overflow-x-auto border-y-2 border-fg" tabIndex={0} role="group" aria-label={`${sheet.alt} Scroll sideways to see all of it.`}>
             <Image src={sheet.src} width={sheet.width} height={sheet.height} alt={sheet.alt} sizes="(min-width: 768px) 100vw, 230vw" className="block h-auto w-[230vw] max-w-none md:w-full" />
           </div>
           {sheet.caption ? <p className="shell t-data mt-4 text-fg-2">Fig. 4: {sheet.caption}</p> : null}
@@ -216,7 +216,7 @@ function VideoDirector({ project, number }: SpreadProps) {
         ) : null}
 
         <figure className="md:col-span-8 lg:col-span-5">
-          <div className="aspect-[16/10] border-2 border-paper">
+          <div className="aspect-[16/10] border-2 border-fg">
             <ProjectVisual project={project} />
           </div>
           <figcaption className="t-data mt-4 text-fg-2">Fig. 6: diagram of the thirteen stages, drawn from the code</figcaption>
@@ -233,12 +233,12 @@ function VideoDirector({ project, number }: SpreadProps) {
   );
 }
 
-/** 04. Vermilion. Its main photo, if it has one, cut on the diagonal, next to how listings are reviewed. */
+/** 04. Vermilion, or the colour picked in the panel. Its main photo, if it has one, cut on the diagonal, next to how listings are reviewed. */
 function VentureWorld({ project, number }: SpreadProps) {
   const [gate] = project.images;
   const phone = phoneFor(project, gate);
   return (
-    <article data-surface="red" className="relative overflow-hidden py-[var(--spacing-section)]">
+    <article data-surface={project.surface} className="relative overflow-hidden py-[var(--spacing-section)]">
       <Numeral outline className="right-[var(--spacing-gutter)] top-[2vw] lg:bottom-[2vw] lg:top-auto">
         {number}
       </Numeral>

@@ -111,7 +111,11 @@ export default function EInvoicingPage() {
               <ArrowUpRight aria-hidden="true" />
             </a>
           ) : null}
-          <a href={mailto("E-invoicing")} className={site.booking ? "btn btn-ghost" : "btn btn-primary"}>
+          {/* The address is long: on a phone it wraps inside the button instead of pushing the page sideways. */}
+          <a
+            href={mailto("E-invoicing")}
+            className={`${site.booking ? "btn btn-ghost" : "btn btn-primary"} max-w-full whitespace-normal py-3 [overflow-wrap:anywhere]`}
+          >
             Email {site.email}
             <ArrowRight aria-hidden="true" />
           </a>

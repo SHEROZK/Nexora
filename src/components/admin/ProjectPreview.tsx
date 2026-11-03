@@ -61,8 +61,9 @@ export function ProjectPreview({ project, dimmed, written = [] }: { project: Sto
             </div>
 
             {picture ? (
+              // Keyed by address so switching projects never leaves the last project's picture on screen while the new one loads.
               // eslint-disable-next-line @next/next/no-img-element -- a panel preview of a local file
-              <img src={picture.src} alt="" className="max-h-64 w-full border-2 border-ink bg-paper object-cover object-top" />
+              <img key={picture.src} src={picture.src} alt="" className="max-h-64 w-full border-2 border-ink bg-paper object-cover object-top" />
             ) : (
               <div className="flex aspect-[16/10] items-end border-2 border-fg p-4">
                 <p className="t-data">

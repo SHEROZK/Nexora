@@ -46,6 +46,7 @@
       "title": "E-invoicing Copilot",
       "video": null,
       "images": [],
+      "mobile": null,
       "points": [
         "Wrote the rule engine and its checks for seller, buyer, header, line and total fields",
         "Built loaders for flat CSV and Excel tables, and for formatted Excel invoices through a per-template cell map",
@@ -85,6 +86,7 @@
       "title": "AI Menu Integrator",
       "video": null,
       "images": [],
+      "mobile": null,
       "points": [
         "Built accounts, organisations, members and roles, and restaurants with locations",
         "Built upload and menu import for PDF, PNG, JPEG and WebP files",
@@ -111,33 +113,56 @@
       "year": "2026",
       "cover": "",
       "group": "website",
-      "links": [],
+      "links": [
+        {
+          "href": "https://ivy-tile.com/",
+          "label": "Ivy-Tile"
+        }
+      ],
       "stack": [
         "WordPress",
         "WooCommerce",
         "WoodMart",
-        "Elementor"
+        "Elementor",
+        "Php",
+        "Html",
+        "Css"
       ],
       "title": "Ivy Tile",
       "video": null,
-      "images": [],
+      "images": [
+        {
+          "alt": "",
+          "src": "https://xfeoqaetvdpfoscnvyjd.supabase.co/storage/v1/object/public/media/shots/ivy-tile-mw0e7vqo.png",
+          "width": 1920,
+          "height": 1053,
+          "caption": ""
+        }
+      ],
+      "mobile": {
+        "alt": "",
+        "src": "https://xfeoqaetvdpfoscnvyjd.supabase.co/storage/v1/object/public/media/shots/ivy-tile-mw0e79l3.jpg",
+        "width": 738,
+        "height": 1600,
+        "caption": ""
+      },
       "points": [
         "Store setup on WordPress and WooCommerce",
         "Theme and page building with WoodMart and Elementor",
         "Catalogue structure and product content"
       ],
       "summary": "An online store for a tile business, built on WooCommerce, bringing the catalogue, product photography and brand assets into one site.",
-      "surface": "red",
+      "surface": "ink",
       "category": "Ecommerce store for a tile retailer",
-      "featured": false,
+      "featured": true,
       "overview": [
         "A redevelopment of a tile retailer's website into a full online store: product catalogue, categories, product pages and checkout, on WooCommerce with the WoodMart theme and Elementor for page building."
       ],
       "roleNote": "",
       "roleTitle": "Website build",
-      "statusKind": "development",
+      "statusKind": "live",
       "statusNote": "A redevelopment in progress. No launch date, sales or traffic figures are stated here.",
-      "statusLabel": "In development"
+      "statusLabel": "Live"
     },
     {
       "slug": "ugc-videos",
@@ -153,6 +178,7 @@
       "title": "UGC Videos",
       "video": null,
       "images": [],
+      "mobile": null,
       "points": [],
       "summary": "Short, user-style videos made for brands to use on social feeds and product pages.",
       "surface": "ink",
@@ -182,6 +208,7 @@
       "title": "SEO",
       "video": null,
       "images": [],
+      "mobile": null,
       "points": [],
       "summary": "Making websites easier for search engines to read: structure, speed, metadata and content.",
       "surface": "paper",
@@ -229,25 +256,32 @@
           "caption": "It Tells you what you need to know"
         },
         {
-          "alt": "",
+          "alt": "Documents list",
           "src": "https://xfeoqaetvdpfoscnvyjd.supabase.co/storage/v1/object/public/media/shots/daftar-a-complete-management-system-mw0cqq6c.png",
           "width": 2880,
           "height": 1800,
-          "caption": ""
+          "caption": "It shows the validity of the documents and notify you"
         },
         {
-          "alt": "",
-          "src": "https://xfeoqaetvdpfoscnvyjd.supabase.co/storage/v1/object/public/media/shots/daftar-a-complete-management-system-mw0crh8o.png",
-          "width": 780,
-          "height": 1688,
-          "caption": ""
+          "alt": "Employees List",
+          "src": "https://xfeoqaetvdpfoscnvyjd.supabase.co/storage/v1/object/public/media/shots/daftar-a-complete-management-system-mw0e1pep.png",
+          "width": 2880,
+          "height": 1800,
+          "caption": "Employees details and profile"
         }
       ],
+      "mobile": {
+        "alt": "",
+        "src": "https://xfeoqaetvdpfoscnvyjd.supabase.co/storage/v1/object/public/media/shots/daftar-a-complete-management-system-mw0e0ovh.png",
+        "width": 780,
+        "height": 1688,
+        "caption": ""
+      },
       "points": [
         "I designed and built the whole product: the database, the backend, the web portal and the mobile app. I started by writing the product spec and laying out every screen on a design canvas. After that I built it in small slices, around 35 so far, each one tested before the next began."
       ],
       "summary": "A back office for independent UAE restaurants that tracks salaries, post-dated cheques and document renewals so the owner never misses one, and works alongside the POS they already use.",
-      "surface": "red",
+      "surface": "cobalt",
       "category": "Back-office system for companies or businesses in the UAE",
       "featured": true,
       "overview": [
@@ -303,6 +337,7 @@
           "caption": ""
         }
       ],
+      "mobile": null,
       "points": [
         "Designed the schema and wrote the migrations, including the Row Level Security policies and the isolation tests that check them.",
         "Built the tenant, owner, guardian and admin areas end to end.",
@@ -359,6 +394,7 @@
           "caption": ""
         }
       ],
+      "mobile": null,
       "points": [
         "Built the public site, listing pages, the create and edit flow, the seller dashboard and the admin console.",
         "Built the review workflow for new listings and for edits to approved ones.",

@@ -80,7 +80,8 @@ export function OrderMachine() {
                   />
                   <span
                     className={cn(
-                      "t-data block transition-colors duration-500 sm:mt-3",
+                      // Seven columns in a narrow panel just above 1024px: drop the tracking so "Preparing" fits its column.
+                      "t-data block transition-colors duration-500 sm:mt-3 lg:max-xl:tracking-normal",
                       current ? "text-accent" : done ? "text-fg" : "text-fg-3",
                     )}
                   >
