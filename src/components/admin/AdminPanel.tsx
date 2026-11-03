@@ -78,6 +78,7 @@ const blank: StoredProject = {
   points: [],
   images: [],
   cover: "",
+  mobile: null,
   video: null,
 };
 
@@ -197,7 +198,7 @@ function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onRe
   const p = draft.project;
   const set = (patch: Partial<StoredProject>) => onChange({ ...p, ...patch });
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<"image" | "video" | null>(null);
+  const [uploading, setUploading] = useState<"image" | "mobile" | "video" | null>(null);
   const address = draft.slug ?? slugify(p.title);
 
   const commit = () => {
@@ -245,8 +246,8 @@ function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onRe
     return body.src as string;
   };
 
-  const uploadImage = async (file: File) => {
-    setUploading("image");
+  const uploadImage = async (file: File, slot: "image" | "mobile" = "image") => {
+    setUploading(slot);
     setError(null);
     try {
       const bitmap = await createImageBitmap(file).catch(() => {
@@ -255,7 +256,9 @@ function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onRe
       const { width, height } = bitmap;
       bitmap.close();
       const src = await send(file, "image");
-      set({ images: [...p.images, { src, width, height, alt: "", caption: "" }].slice(0, MAX_IMAGES) });
+      const image = { src, width, height, alt: "", caption: "" };
+      if (slot === "mobile") set({ mobile: { ...image, alt: p.mobile?.alt ?? "" } });
+      else set({ images: [...p.images, image].slice(0, MAX_IMAGES) });
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : "The image could not be uploaded.");
     } finally {
@@ -470,6 +473,53 @@ function ProjectForm({ draft, written, taken, onChange, onCommit, onCancel, onRe
               />
             </label>
           ) : null}
+        </fieldset>
+
+        <fieldset className="sm:col-span-2">
+          <legend className="text-[0.9375rem] font-semibold">Mobile view photo (optional)</legend>
+          <p className="mt-1 text-[0.8125rem] leading-relaxed text-fg-3">
+            A screenshot of it on a phone, portrait. Shown only on the home page, standing in front of the main picture. It does not use a
+            photo slot and is not shown on the project&rsquo;s own page.
+          </p>
+          {p.mobile ? (
+            <div className="mt-3 grid gap-4 border-2 border-fg p-4 sm:grid-cols-[6rem_minmax(0,1fr)]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- a panel preview of a local file */}
+              <img src={p.mobile.src} alt="" className="w-full border border-line bg-paper object-cover object-top" />
+              <div className="grid content-start gap-4">
+                <Field label="Describe the mobile photo" hint="Read aloud by screen readers.">
+                  {(id) => (
+                    <input
+                      id={id}
+                      value={p.mobile?.alt ?? ""}
+                      maxLength={200}
+                      onChange={(e) => p.mobile && set({ mobile: { ...p.mobile, alt: e.target.value } })}
+                      className={cn(field, "h-12")}
+                    />
+                  )}
+                </Field>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => set({ mobile: null })} className={cn(rowButton, "text-refuse")}>
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          <label className={cn("btn btn-ghost mt-4 cursor-pointer", uploading && "pointer-events-none opacity-60")}>
+            {uploading === "mobile" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <Upload aria-hidden="true" />}
+            {p.mobile ? "Replace the mobile photo" : "Add a mobile photo"}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) uploadImage(file, "mobile");
+              }}
+            />
+          </label>
         </fieldset>
 
         <fieldset className="sm:col-span-2">

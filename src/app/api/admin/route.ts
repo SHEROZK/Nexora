@@ -86,5 +86,14 @@ export async function PUT(request: Request) {
     console.error("admin: the deploy hook failed", problem);
     return NextResponse.json({ ok: true, store, published: false, message: "Saved, but the site could not be rebuilt. Save again, or redeploy from Vercel." });
   }
+  // Without a deploy hook the save is kept, but the live site, built from store.json, never hears about it.
+  if (!published && process.env.NODE_ENV !== "development") {
+    return NextResponse.json({
+      ok: true,
+      store,
+      published,
+      message: "Saved, but the live site was not rebuilt: VERCEL_DEPLOY_HOOK_URL is not set in Vercel. Redeploy from Vercel to show the changes.",
+    });
+  }
   return NextResponse.json({ ok: true, store, published });
 }

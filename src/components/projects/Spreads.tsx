@@ -40,6 +40,18 @@ const isTall = (image: ProjectImage) => image.width / image.height < 0.8;
 /** A portrait picture chosen as the main one is kept to a phone's width instead of filling the column. */
 const fit = (image: ProjectImage) => (isTall(image) ? "mx-auto max-w-[22rem]" : undefined);
 
+/** The mobile photo set in the panel. It stands in front of a landscape main picture; a portrait one is already phone-shaped. */
+const phoneFor = (project: Project, main: ProjectImage | undefined) => (main && !isTall(main) && !isStrip(main) ? project.mobile : undefined);
+
+/** A phone screenshot standing over a corner of the main picture, drifting slightly against it. Its parent must be relative. */
+function Phone({ image, className }: { image: ProjectImage; className: string }) {
+  return (
+    <Drift y={18} className={cn("absolute z-10 w-[22%] lg:w-[19%]", className)}>
+      <Shot image={image} sizes="(min-width: 1024px) 12vw, 22vw" />
+    </Drift>
+  );
+}
+
 function Facts({ project, className }: { project: Project; className?: string }) {
   return (
     <dl className={cn("border-t-2 border-fg", className)}>
@@ -76,7 +88,7 @@ function FoodForLess({ project, number }: SpreadProps) {
   // The main picture fills the frame; the first phone-shaped one after it sits over its corner.
   const [storefront, ...rest] = project.images;
   if (!storefront || isStrip(storefront)) return <Generic project={project} number={number} />;
-  const phone = isTall(storefront) ? undefined : rest.find(isTall);
+  const phone = phoneFor(project, storefront) ?? (isTall(storefront) ? undefined : rest.find(isTall));
   return (
     <article data-surface="yellow" className="relative overflow-hidden py-[var(--spacing-section)]">
       <Numeral outline className="right-[var(--spacing-gutter)] top-[2vw]">
@@ -100,11 +112,7 @@ function FoodForLess({ project, number }: SpreadProps) {
           <RevealMedia mask="circle" className={fit(storefront)}>
             <Shot image={storefront} sizes="(min-width: 1024px) 60vw, 100vw" />
           </RevealMedia>
-          {phone ? (
-            <Drift y={18} className="absolute -bottom-[10%] left-[5%] w-[22%] lg:w-[19%]">
-              <Shot image={phone} sizes="(min-width: 1024px) 12vw, 22vw" />
-            </Drift>
-          ) : null}
+          {phone ? <Phone image={phone} className="-bottom-[10%] left-[5%]" /> : null}
           {storefront.caption ? <p className={cn("t-data mt-4", phone && "pl-[31%] lg:pl-[27%]")}>Fig. 2: {storefront.caption}</p> : null}
         </div>
       </div>
@@ -115,6 +123,7 @@ function FoodForLess({ project, number }: SpreadProps) {
 /** 02. Paper with a cobalt slab. The dashboard beside a specification sheet, like a property listing. */
 function PgIndia({ project, number }: SpreadProps) {
   const [dashboard] = project.images;
+  const phone = phoneFor(project, dashboard);
   return (
     <article data-surface="paper" className="relative overflow-hidden py-[var(--spacing-section)]">
       <div className="shell relative grid gap-x-12 gap-y-24 lg:grid-cols-12 lg:gap-y-14 xl:gap-x-20 3xl:gap-x-28">
@@ -132,6 +141,7 @@ function PgIndia({ project, number }: SpreadProps) {
               </div>
             )}
           </RevealMedia>
+          {phone ? <Phone image={phone} className="-bottom-[6%] right-[2%]" /> : null}
           {dashboard?.caption ? <p className="t-data relative mt-4 max-w-[66%] text-paper md:ml-[6%]">Fig. 3: {dashboard.caption}</p> : null}
         </div>
 
@@ -226,6 +236,7 @@ function VideoDirector({ project, number }: SpreadProps) {
 /** 04. Vermilion. Its main photo, if it has one, cut on the diagonal, next to how listings are reviewed. */
 function VentureWorld({ project, number }: SpreadProps) {
   const [gate] = project.images;
+  const phone = phoneFor(project, gate);
   return (
     <article data-surface="red" className="relative overflow-hidden py-[var(--spacing-section)]">
       <Numeral outline className="right-[var(--spacing-gutter)] top-[2vw] lg:bottom-[2vw] lg:top-auto">
@@ -249,9 +260,12 @@ function VentureWorld({ project, number }: SpreadProps) {
           {gate ? (
             <>
               {gate.caption ? <p className="t-data mb-3 md:ml-[30%]">Fig. 7: {gate.caption}</p> : null}
-              <RevealMedia mask="diagonal" className={cn("md:ml-[30%]", fit(gate))}>
-                <Shot image={gate} sizes="(min-width: 1024px) 34vw, (min-width: 768px) 70vw, 100vw" />
-              </RevealMedia>
+              <div className="relative">
+                <RevealMedia mask="diagonal" className={cn("md:ml-[30%]", fit(gate))}>
+                  <Shot image={gate} sizes="(min-width: 1024px) 34vw, (min-width: 768px) 70vw, 100vw" />
+                </RevealMedia>
+                {phone ? <Phone image={phone} className="right-[3%] top-[18%] w-[24%] lg:w-[22%]" /> : null}
+              </div>
             </>
           ) : null}
 
@@ -270,6 +284,7 @@ function VentureWorld({ project, number }: SpreadProps) {
 /** Any other featured project, including ones added in the admin panel. Uses the project's own colour. */
 function Generic({ project, number }: SpreadProps) {
   const [image] = project.images;
+  const phone = phoneFor(project, image);
   return (
     <article data-surface={project.surface} className="relative overflow-hidden py-[var(--spacing-section)]">
       <Numeral outline className="right-[var(--spacing-gutter)] top-[2vw]">
@@ -289,16 +304,19 @@ function Generic({ project, number }: SpreadProps) {
           </div>
         </div>
         <figure className="lg:col-span-7">
-          <RevealMedia mask="up" className={image ? fit(image) : undefined}>
-            {image ? (
-              <Shot image={image} sizes="(min-width: 1024px) 56vw, 100vw" />
-            ) : (
-              <div data-surface="paper" className="aspect-[16/10] border-2 border-ink">
-                <ProjectVisual project={project} />
-              </div>
-            )}
-          </RevealMedia>
-          {image?.caption ? <figcaption className="t-data mt-4">{image.caption}</figcaption> : null}
+          <div className="relative">
+            <RevealMedia mask="up" className={image ? fit(image) : undefined}>
+              {image ? (
+                <Shot image={image} sizes="(min-width: 1024px) 56vw, 100vw" />
+              ) : (
+                <div data-surface="paper" className="aspect-[16/10] border-2 border-ink">
+                  <ProjectVisual project={project} />
+                </div>
+              )}
+            </RevealMedia>
+            {phone ? <Phone image={phone} className="-bottom-[10%] left-[5%]" /> : null}
+          </div>
+          {image?.caption ? <figcaption className={cn("t-data mt-4", phone && "pl-[31%] lg:pl-[27%]")}>{image.caption}</figcaption> : null}
         </figure>
       </div>
     </article>

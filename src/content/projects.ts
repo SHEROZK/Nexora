@@ -47,6 +47,8 @@ export interface Project {
   surface: Surface;
   /** Real screenshots and artifacts, most important first. Empty when none exist. */
   images: ProjectImage[];
+  /** A phone screenshot added in the panel. Only the home page shows it, in front of the main picture. */
+  mobile?: ProjectImage;
   /** One video, added in the panel. Shown after the images. */
   video?: StoredVideo;
   links: { label: string; href: string; note?: string }[];
@@ -1085,6 +1087,7 @@ function fromStore(p: StoredProject): Project {
     visual: "plate",
     surface: p.surface,
     images: coverFirst(p.images, p.cover),
+    mobile: p.mobile ?? undefined,
     video: p.video ?? undefined,
     links: p.links.map((link) => ({ label: linkLabel(link), href: link.href })),
     facts: [],
@@ -1128,6 +1131,7 @@ export function toStored(project: Project): StoredProject {
     points: project.contribution,
     images: [],
     cover: "",
+    mobile: project.mobile ?? null,
     video: project.video ?? null,
   };
 }
@@ -1151,6 +1155,7 @@ function withOverride(project: Project): Project {
     // The panel starts from the written links, so the edited list replaces them. A note survives on a link kept unchanged.
     links: edit.links.map((link) => ({ label: linkLabel(link), href: link.href, note: project.links.find((written) => written.href === link.href)?.note })),
     images: coverFirst([...project.images, ...edit.images], edit.cover),
+    mobile: edit.mobile ?? project.mobile,
     video: edit.video ?? project.video,
     overview: edit.overview.length > 0 ? edit.overview : project.overview,
     contribution: edit.points.length > 0 ? edit.points : project.contribution,

@@ -87,6 +87,11 @@ export interface StoredProject {
    * study. Any of its pictures, written or added; empty keeps the usual order.
    */
   cover: string;
+  /**
+   * A phone-width screenshot, shown only on the home page, standing in front of the main
+   * picture. Kept apart from images, so it takes no photo slot and is not on the case study.
+   */
+  mobile: StoredImage | null;
   video: StoredVideo | null;
 }
 
@@ -243,6 +248,7 @@ function cleanProject(value: unknown, forcedSlug?: string): StoredProject | null
     points: lines(p.points, 12, 300),
     images: cleanImages(p),
     cover: isUploadedImage(text(p.cover, 300)) ? text(p.cover, 300) : "",
+    mobile: cleanImage(p.mobile),
     video: cleanVideo(p.video),
   };
 }
