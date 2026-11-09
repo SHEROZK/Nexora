@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { navigation } from "@/config/navigation";
-import { mailto, site, socialProfiles } from "@/config/site";
+import { FaWhatsapp } from "react-icons/fa6";
+import { mailto, site, socialProfiles, whatsapp } from "@/config/site";
 import { featuredProjects } from "@/content/projects";
 import { Logo } from "@/components/brand/Logo";
 import { SocialLinks } from "@/components/ui/SocialLinks";
@@ -19,7 +20,12 @@ export function Footer() {
             {site.name}
             <span className="accent block">builds software that works.</span>
           </p>
-          <a href={mailto()} className="link mt-8 inline-block break-all text-[1.0625rem]">
+          <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link mt-8 flex w-fit items-center gap-2 text-[1.0625rem]">
+            <FaWhatsapp className="size-4" aria-hidden="true" />
+            WhatsApp {site.whatsapp.display}
+            <span className="sr-only">(opens WhatsApp)</span>
+          </a>
+          <a href={mailto()} className="link mt-3 inline-block break-all text-[1.0625rem]">
             {site.email}
           </a>
           <SocialLinks profiles={socialProfiles} className="mt-6" />
@@ -72,6 +78,11 @@ export function Footer() {
                   </a>
                 </li>
               ))}
+              <li>
+                <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link-quiet pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center">
+                  WhatsApp
+                </a>
+              </li>
               <li>
                 <a href={mailto()} className="link-quiet pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center">
                   Email

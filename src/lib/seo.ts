@@ -65,6 +65,7 @@ export function siteSchema(services: Service[]) {
         logo: absoluteUrl("/icons/icon-512.png"),
         url: siteUrl,
         email: `mailto:${site.email}`,
+        telephone: site.whatsapp.number,
         address: { "@type": "PostalAddress", addressLocality: "Dubai", addressCountry: "AE" },
         knowsAbout: services.map((service) => service.title),
         sameAs: socialProfiles.map((profile) => profile.href),

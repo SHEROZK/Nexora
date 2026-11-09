@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { mailto, site } from "@/config/site";
 import {
@@ -43,18 +42,21 @@ const empty: ContactInput = { name: "", email: "", company: "", type: "", messag
  *    in the visitor's own email app, and says so before they start typing.
  */
 export function ContactForm({ serverDelivery }: { serverDelivery: boolean }) {
-  const params = useSearchParams();
   const id = useId();
   const startedAt = useRef(0);
   const summary = useRef<HTMLDivElement>(null);
-  // A link from the services page can preselect the enquiry type.
-  const [values, setValues] = useState<ContactInput>(() => ({ ...empty, type: TOPICS[params.get("topic") ?? ""] ?? "" }));
+  const [values, setValues] = useState<ContactInput>(empty);
   const [errors, setErrors] = useState<ContactErrors>({});
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [trap, setTrap] = useState("");
 
   useEffect(() => {
     startedAt.current = Date.now();
+    // A link from the services page can preselect the enquiry type. Read here rather than with
+    // useSearchParams, so the form is part of the static page instead of waiting for JavaScript.
+    const topic = TOPICS[new URLSearchParams(window.location.search).get("topic") ?? ""];
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the URL is only readable after hydration
+    if (topic) setValues((current) => (current.type ? current : { ...current, type: topic }));
   }, []);
 
   const set = (field: keyof ContactInput) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

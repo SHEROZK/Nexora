@@ -1,12 +1,12 @@
-import Link from "next/link";
-import { ArrowDown, ArrowRight } from "lucide-react";
-import { site } from "@/config/site";
+import { ArrowDown } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
+import { site, whatsapp } from "@/config/site";
 import { projects } from "@/content/projects";
 import { Shot } from "@/components/ui/Shot";
 import { HeroMotion } from "./HeroMotion";
 
 /**
- * First viewport: the name set large, one plain sentence about what you do, a caption,
+ * First viewport: the name set large, one plain sentence saying who this is for, a caption,
  * and a stack of real product screens. The words and the caption come from the content
  * store, so they can be changed in the admin panel.
  *
@@ -19,13 +19,17 @@ export function Hero() {
   const wide = shots.filter((image) => image.width > image.height);
   const tall = shots.find((image) => image.height > image.width);
   const [front, back] = wide;
+  // On phones the longest word sets the size, so a long word never runs off the screen.
+  // The display face sets about 0.45em a letter in capitals; 0.48 keeps the word inside the margins.
+  const longest = Math.max(...[hero.wordOne, hero.wordTwo].map((word) => word?.length ?? 0), 1);
+  const fit = { "--hero-fit": `calc((100vw - 2 * var(--spacing-gutter)) / ${(longest * 0.48).toFixed(2)})` } as React.CSSProperties;
   const delay = (i: number) => ({ animationDelay: `${i * 110 + 150}ms` }) as React.CSSProperties;
 
   return (
     <HeroMotion className="relative overflow-hidden pt-[var(--spacing-header)]">
       <div className="shell grid gap-x-14 gap-y-14 pb-16 pt-[clamp(2.5rem,7svh,5rem)] md:min-h-[calc(100svh-var(--spacing-header))] md:grid-cols-12 md:items-center md:pb-16">
         <div className="md:col-span-7">
-          <h1 className="t-giant text-[min(19vw,26svh)]">
+          <h1 className="t-giant text-[length:min(19vw,26svh,var(--hero-fit))] md:text-[min(19vw,26svh)]" style={fit}>
             <span data-word="1" className="block w-max">
               <span className="block animate-slide-right text-accent">{hero.wordOne}</span>
             </span>
@@ -53,14 +57,20 @@ export function Hero() {
           ) : null}
 
           <div className="enter mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap" style={{ "--i": 6 } as React.CSSProperties}>
-            <a href="#work" className="btn btn-primary">
-              Explore selected work
+            <a
+              href={whatsapp("Hi, I found Nexora online and would like to talk about software for my business.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              data-icon="lead"
+            >
+              <FaWhatsapp aria-hidden="true" />
+              Message on WhatsApp
+            </a>
+            <a href="#work" className="btn btn-ghost">
+              See what is running
               <ArrowDown aria-hidden="true" />
             </a>
-            <Link href="/contact" className="btn btn-ghost">
-              Let&rsquo;s build something
-              <ArrowRight aria-hidden="true" />
-            </Link>
           </div>
 
           <p className="enter t-data mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 text-fg-2" style={{ "--i": 7 } as React.CSSProperties}>
@@ -68,9 +78,7 @@ export function Hero() {
               <span className="status-mark" data-kind={site.availability.open ? "live" : "development"} aria-hidden="true" />
               {site.availability.open ? site.availability.label : site.availability.closedLabel}
             </span>
-            <span>
-              {site.title} · {site.positioning}
-            </span>
+            <span>Web apps · Back offices · AI features</span>
             <span>{site.location}</span>
           </p>
         </div>
@@ -94,7 +102,7 @@ export function Hero() {
                   <div className="animate-drop" style={delay(2)}>
                     {/* The coloured block is the print's card backing, offset behind it. */}
                     <div className="absolute inset-0 translate-x-[4%] translate-y-[7%] bg-red" aria-hidden="true" />
-                    <Shot image={front} sizes="(min-width: 768px) 36vw, 84vw" preload className="relative" />
+                    <Shot image={front} sizes="(min-width: 768px) 36vw, 84vw" className="relative" />
                   </div>
                 </div>
               </div>

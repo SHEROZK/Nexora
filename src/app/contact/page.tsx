@@ -1,7 +1,7 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
-import { mailto, site, socialProfiles } from "@/config/site";
+import { FaWhatsapp } from "react-icons/fa6";
+import { mailto, site, socialProfiles, whatsapp } from "@/config/site";
 import { SocialLinks } from "@/components/ui/SocialLinks";
 import { formBackendConfigured } from "@/lib/contact";
 import { ContactForm } from "@/components/contact/ContactForm";
@@ -39,20 +39,28 @@ export default function ContactPage() {
         }
       >
         <p>
-          I take on product builds, AI features and the engineering underneath them, and I am open to conversations
-          about roles where that mix is useful.
+          I take on product builds, AI features and the engineering underneath them. WhatsApp is the quickest way to
+          reach me; the form below suits a longer brief.
         </p>
       </PageIntro>
 
       <div className="shell grid gap-x-8 gap-y-16 py-14 md:grid-cols-12 md:py-20">
         <div className="md:col-span-7">
-          <Suspense fallback={<p className="text-fg-2">Loading the form.</p>}>
-            <ContactForm serverDelivery={serverDelivery} />
-          </Suspense>
+          <ContactForm serverDelivery={serverDelivery} />
         </div>
 
         <aside className="md:col-span-4 md:col-start-9" aria-label="Other ways to reach me">
           <dl className="border-t border-line">
+            <div className="border-b border-line py-5">
+              <dt className="text-[0.875rem] text-fg-3">WhatsApp</dt>
+              <dd className="mt-2">
+                <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link inline-flex items-center gap-2 text-[1.0625rem]">
+                  <FaWhatsapp className="size-4" aria-hidden="true" />
+                  {site.whatsapp.display}
+                  <span className="sr-only">(opens WhatsApp)</span>
+                </a>
+              </dd>
+            </div>
             <div className="border-b border-line py-5">
               <dt className="text-[0.875rem] text-fg-3">Email</dt>
               <dd className="mt-2">

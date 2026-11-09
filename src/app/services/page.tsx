@@ -37,7 +37,7 @@ export default function ServicesPage() {
         surface="yellow"
         heading={
           <>
-            What you can <em className="accent">hire me</em> for
+            Custom builds for <em className="accent">your</em> business
           </>
         }
       >

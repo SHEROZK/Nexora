@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
+import { site, whatsapp } from "@/config/site";
 import type { Project, ProjectImage } from "@/content/projects";
 import { cn } from "@/lib/cn";
 import { Drift } from "@/components/motion/Drift";
@@ -10,7 +12,7 @@ import { Status } from "@/components/ui/Status";
 import { ProjectVisual } from "./ProjectVisual";
 
 /**
- * The four featured projects on the home page. Each is its own full-bleed composition:
+ * The featured projects on the home page. Each is its own full-bleed composition:
  * a different colour, grid, mask and kind of picture. What they share is the type,
  * the hard frames and the facts each one states (status, role, what it is built with).
  */
@@ -73,13 +75,40 @@ function Facts({ project, className }: { project: Project; className?: string })
   );
 }
 
+/**
+ * The next step for a buyer, then the case study for anyone who wants the detail.
+ * Nexora's own products (the ones hosted on its domain) get a demo; client work gets an offer to build something
+ * like it, since a client's system is not Nexora's to demo. Both open WhatsApp with the message typed.
+ */
+function isOwnProduct(project: Project) {
+  return project.links.some((link) => {
+    try {
+      const host = new URL(link.href).hostname;
+      return host === site.domain || host.endsWith(`.${site.domain}`);
+    } catch {
+      return false;
+    }
+  });
+}
+
 function CaseLink({ project }: { project: Project }) {
+  const product = isOwnProduct(project);
+  const message = product
+    ? `Hi, I saw ${project.title} on the Nexora site and would like a demo.`
+    : `Hi, I saw ${project.title} on the Nexora site and would like something similar for my business.`;
   return (
-    <Link href={`/work/${project.slug}`} className="cta">
-      Read the case study
-      <span className="sr-only">: {project.title}</span>
-      <ArrowRight className="size-[0.8em] self-center" aria-hidden="true" />
-    </Link>
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-5">
+      <a href={whatsapp(message)} target="_blank" rel="noopener noreferrer" className="btn btn-primary" data-icon="lead">
+        <FaWhatsapp aria-hidden="true" />
+        {product ? "Ask for a demo" : "Want one like this?"}
+        <span className="sr-only">: {project.title}, on WhatsApp</span>
+      </a>
+      <Link href={`/work/${project.slug}`} className="cta">
+        Read the case study
+        <span className="sr-only">: {project.title}</span>
+        <ArrowRight className="size-[0.8em] self-center" aria-hidden="true" />
+      </Link>
+    </div>
   );
 }
 

@@ -16,7 +16,8 @@ function originFrom(value: string | undefined) {
 }
 
 const envUrl = originFrom(process.env.NEXT_PUBLIC_SITE_URL);
-const productionUrl = "https://nexoratechnology.me";
+const domain = "nexoratechnology.me";
+const productionUrl = `https://${domain}`;
 
 export const site = {
   name: "Nexora",
@@ -26,6 +27,8 @@ export const site = {
   /** Used in metadata and the social preview. */
   description:
     "Nexora is a full-stack development and AI engineering practice in Dubai, building digital products, the systems behind them, and the AI workflows inside them.",
+  /** The site's own domain. Products Nexora runs itself live on it or a subdomain of it. */
+  domain,
   location: "Dubai, UAE",
   timezone: "GST (UTC+4)",
 
@@ -39,6 +42,9 @@ export const site = {
 
   /** The public business address, on the site's own domain. */
   email: "sheroz@nexoratechnology.me",
+
+  /** WhatsApp, the way most UAE businesses expect to get in touch. International format, digits only after the plus. */
+  whatsapp: { number: "+971563619584", display: "+971 56 361 9584" },
 
   /** The person behind Nexora, named on the e-invoicing page. */
   founder: {
@@ -91,6 +97,12 @@ export const socialProfiles = SOCIALS.filter(({ id }) => site.social[id]).map(({
 
 export function absoluteUrl(path = "/") {
   return `${siteUrl}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+/** A wa.me link, optionally with the first message already typed. */
+export function whatsapp(text?: string) {
+  const number = site.whatsapp.number.replace(/\D/g, "");
+  return `https://wa.me/${number}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 }
 
 export function mailto(subject?: string, body?: string) {

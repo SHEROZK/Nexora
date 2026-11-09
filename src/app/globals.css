@@ -372,6 +372,10 @@
   .btn[data-arrow="up-right"]:hover svg {
     transform: translate(2px, -2px);
   }
+  /* A logo leading the label is an identity mark, not an arrow: it stays put. */
+  .btn[data-icon="lead"]:hover svg {
+    transform: none;
+  }
   .btn-primary {
     background: var(--fg);
     color: var(--surface);

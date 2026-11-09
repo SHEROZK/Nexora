@@ -4,8 +4,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRight, Menu, Search, X } from "lucide-react";
-import { navigation } from "@/config/navigation";
-import { mailto, site } from "@/config/site";
+import { navigation, type NavItem } from "@/config/navigation";
+import { FaWhatsapp } from "react-icons/fa6";
+import { mailto, site, whatsapp } from "@/config/site";
 import { cn } from "@/lib/cn";
 import { lockScroll, unlockScroll } from "@/lib/scroll";
 import { OPEN_PALETTE_EVENT } from "@/components/navigation/CommandPalette";
@@ -30,6 +31,7 @@ export function Header() {
   useEffect(() => {
     if (!isHome) return;
     const sections = navigation
+      .filter((item) => item.onHome)
       .map((item) => document.getElementById(item.id))
       .filter((el): el is HTMLElement => el !== null);
     const observer = new IntersectionObserver(
@@ -52,8 +54,9 @@ export function Header() {
   };
   const openPalette = () => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT));
 
-  const isActive = (id: string, href: string) => (isHome ? section === id : pathname.startsWith(href));
-  const hrefFor = (id: string, href: string) => (isHome ? `#${id}` : href);
+  const isActive = (item: NavItem) => (isHome ? section === item.id : pathname.startsWith(item.href));
+  // On the home page a link scrolls to its section, if the section is there; otherwise it is a route.
+  const hrefFor = (item: NavItem) => (isHome && item.onHome ? `#${item.id}` : item.href);
 
   return (
     <header data-surface="paper" className="fixed inset-x-0 top-0 z-50 border-b-2 border-fg">
@@ -65,11 +68,11 @@ export function Header() {
         <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center">
             {navigation.map((item) => {
-              const active = isActive(item.id, item.href);
+              const active = isActive(item);
               return (
                 <li key={item.id}>
                   <Link
-                    href={hrefFor(item.id, item.href)}
+                    href={hrefFor(item)}
                     aria-current={active ? (isHome ? "location" : "page") : undefined}
                     className={cn(
                       "flex h-[var(--spacing-header)] items-center px-3.5 text-[0.9375rem] font-semibold transition-colors duration-150 xl:px-5",
@@ -139,7 +142,7 @@ export function Header() {
               {[{ id: "home", label: "Home", href: "/" }, ...navigation].map((item, i) => (
                 <li key={item.id}>
                   <Link
-                    href={item.id === "home" ? "/" : hrefFor(item.id, item.href)}
+                    href={item.id === "home" ? "/" : hrefFor(item)}
                     onClick={closeMenu}
                     className="enter t-giant flex items-baseline justify-between py-1.5 text-[clamp(2.25rem,11vw,3.5rem)] leading-[0.92] short:text-[2rem]"
                     style={{ "--i": i } as React.CSSProperties}
@@ -153,7 +156,12 @@ export function Header() {
           </nav>
 
           <div className="shrink-0 space-y-3 border-t-2 border-fg py-6 short:py-4">
-            <a href={mailto()} className="link text-[1.0625rem] font-semibold">
+            <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link flex w-fit items-center gap-2 text-[1.0625rem] font-semibold">
+              <FaWhatsapp className="size-4" aria-hidden="true" />
+              WhatsApp {site.whatsapp.display}
+              <span className="sr-only">(opens WhatsApp)</span>
+            </a>
+            <a href={mailto()} className="link block w-fit text-[1.0625rem] font-semibold">
               {site.email}
             </a>
             <p className="t-data flex items-center gap-2.5">
