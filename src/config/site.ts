@@ -40,11 +40,11 @@ export const site = {
   url: envUrl ?? (process.env.NODE_ENV === "production" ? productionUrl : null),
   fallbackUrl: "http://localhost:3000",
 
-  /** The public business address, on the site's own domain. */
-  email: "sheroz@nexoratechnology.me",
+  /** The public business address. Edited in the admin panel. */
+  email: store.contact.email,
 
-  /** WhatsApp, the way most UAE businesses expect to get in touch. International format, digits only after the plus. */
-  whatsapp: { number: "+971563619584", display: "+971 56 361 9584" },
+  /** WhatsApp, the way most UAE businesses expect to get in touch. International format. Edited in the admin panel; the number itself is never shown, only a WhatsApp button. */
+  whatsapp: store.contact.whatsapp,
 
   /** The person behind Nexora, named on the e-invoicing page. */
   founder: {
@@ -101,7 +101,7 @@ export function absoluteUrl(path = "/") {
 
 /** A wa.me link, optionally with the first message already typed. */
 export function whatsapp(text?: string) {
-  const number = site.whatsapp.number.replace(/\D/g, "");
+  const number = site.whatsapp.replace(/\D/g, "");
   return `https://wa.me/${number}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 }
 

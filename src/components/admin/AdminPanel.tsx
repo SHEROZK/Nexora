@@ -10,8 +10,11 @@ import {
   MEDIA_URL,
   MOTION_HELP,
   REVEALS,
+  EMAIL_PATTERN,
   SOCIALS,
   SPEEDS,
+  WHATSAPP_PATTERN,
+  cleanWhatsapp,
   slugify,
   type MotionSettings,
   type Store,
@@ -761,9 +764,11 @@ export function AdminPanel() {
   const tabs: { id: Tab; label: string }[] = [
     { id: "projects", label: "Projects" },
     { id: "text", label: "Hero and about" },
-    { id: "social", label: "Social links" },
+    { id: "social", label: "Contact and social" },
     { id: "motion", label: "Motion" },
   ];
+  const emailInvalid = !EMAIL_PATTERN.test(store.contact.email.trim());
+  const whatsappInvalid = !WHATSAPP_PATTERN.test(cleanWhatsapp(store.contact.whatsapp.trim()));
   const socialProfiles = SOCIALS.filter(({ id }) => /^https:\/\/\S+$/.test(store.social[id])).map(({ id, label }) => ({ id, label, href: store.social[id] }));
 
   return (
@@ -954,8 +959,52 @@ export function AdminPanel() {
       {/* ------------------------------------------------------------------ social */}
       {tab === "social" ? (
         <div role="tabpanel" id="panel-social" aria-labelledby="tab-social" className="shell grid gap-x-14 gap-y-14 pt-12 lg:grid-cols-12">
-          <section className="space-y-7 lg:col-span-6" aria-labelledby="social-heading">
-            <h2 id="social-heading" className="t-title">
+          <section className="space-y-7 lg:col-span-6" aria-labelledby="contact-heading">
+            <h2 id="contact-heading" className="t-title">
+              Contact
+            </h2>
+            <p className="leading-relaxed text-fg-2">
+              Every Email and WhatsApp button on the site uses these. The number is never shown on the site, only a WhatsApp
+              button that opens a chat with it.
+            </p>
+            <Field label="Business email" hint={emailInvalid ? undefined : "Shown on the site and used by every Email button."}>
+              {(fieldId) => (
+                <>
+                  <input
+                    id={fieldId}
+                    type="email"
+                    value={store.contact.email}
+                    maxLength={160}
+                    placeholder="business@nexoratechnology.me"
+                    aria-invalid={emailInvalid}
+                    onChange={(e) => change({ ...store, contact: { ...store.contact, email: e.target.value } })}
+                    className={cn(field, "h-12")}
+                  />
+                  {emailInvalid ? <p className="mt-2 text-[0.8125rem] font-semibold text-refuse">This is not a full email address, so the old one will be kept.</p> : null}
+                </>
+              )}
+            </Field>
+            <Field label="WhatsApp number" hint={whatsappInvalid ? undefined : "With the country code, e.g. +971 56 361 9584."}>
+              {(fieldId) => (
+                <>
+                  <input
+                    id={fieldId}
+                    type="tel"
+                    value={store.contact.whatsapp}
+                    maxLength={30}
+                    placeholder="+971"
+                    aria-invalid={whatsappInvalid}
+                    onChange={(e) => change({ ...store, contact: { ...store.contact, whatsapp: e.target.value } })}
+                    className={cn(field, "h-12")}
+                  />
+                  {whatsappInvalid ? (
+                    <p className="mt-2 text-[0.8125rem] font-semibold text-refuse">Start with + and the country code, or the old number will be kept.</p>
+                  ) : null}
+                </>
+              )}
+            </Field>
+
+            <h2 id="social-heading" className="t-title pt-7">
               Social links
             </h2>
             <p className="leading-relaxed text-fg-2">

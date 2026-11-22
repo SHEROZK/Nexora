@@ -115,6 +115,8 @@ export interface Store {
   hero: { wordOne: string; wordTwo: string; heading: string; caption: string };
   about: { intro: string; background: string };
   availability: { open: boolean; label: string };
+  /** The business email and the WhatsApp number every "Email" and "WhatsApp" button uses. */
+  contact: { email: string; whatsapp: string };
   social: Record<SocialId, string>;
   motion: MotionSettings;
   /** Slugs of built-in projects taken off the site. */
@@ -157,6 +159,12 @@ export const MOTION_HELP = {
   flowField: { label: "Generative canvas in the lab", hint: "Off shows a single still frame instead." },
   magnetic: { label: "Magnetic buttons", hint: "Main buttons lean slightly toward the mouse." },
 } as const;
+
+export const DEFAULT_CONTACT = { email: "business@nexoratechnology.me", whatsapp: "+971563619584" };
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/** International format: a plus, then 8 to 15 digits. Spaces and dashes are allowed while typing. */
+export const WHATSAPP_PATTERN = /^\+[1-9]\d{7,14}$/;
+export const cleanWhatsapp = (value: string) => value.replace(/[\s()-]/g, "");
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SURFACES: Surface[] = ["paper", "ink", "cobalt", "yellow", "red"];
@@ -284,6 +292,9 @@ export function sanitizeStore(input: unknown, builtInSlugs: string[] = []): Stor
   }
 
   const social = (source.social ?? {}) as Record<string, unknown>;
+  const contact = (source.contact ?? {}) as Record<string, unknown>;
+  const email = text(contact.email, 160);
+  const number = cleanWhatsapp(text(contact.whatsapp, 30));
 
   return {
     hero: {
@@ -294,6 +305,10 @@ export function sanitizeStore(input: unknown, builtInSlugs: string[] = []): Stor
     },
     about: { intro: text(about.intro, 900), background: text(about.background, 900) },
     availability: { open: availability.open !== false, label: text(availability.label, 60) || "Taking on new projects" },
+    contact: {
+      email: EMAIL_PATTERN.test(email) ? email : DEFAULT_CONTACT.email,
+      whatsapp: WHATSAPP_PATTERN.test(number) ? number : DEFAULT_CONTACT.whatsapp,
+    },
     social: Object.fromEntries(SOCIALS.map(({ id }) => [id, https(social[id])])) as Record<SocialId, string>,
     motion: {
       smoothScroll: motion.smoothScroll !== false,

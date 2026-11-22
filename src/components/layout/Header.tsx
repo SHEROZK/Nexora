@@ -158,7 +158,7 @@ export function Header() {
           <div className="shrink-0 space-y-3 border-t-2 border-fg py-6 short:py-4">
             <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link flex w-fit items-center gap-2 text-[1.0625rem] font-semibold">
               <FaWhatsapp className="size-4" aria-hidden="true" />
-              WhatsApp {site.whatsapp.display}
+              Chat on WhatsApp
               <span className="sr-only">(opens WhatsApp)</span>
             </a>
             <a href={mailto()} className="link block w-fit text-[1.0625rem] font-semibold">

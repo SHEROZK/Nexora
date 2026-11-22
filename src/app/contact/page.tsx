@@ -56,7 +56,7 @@ export default function ContactPage() {
               <dd className="mt-2">
                 <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link inline-flex items-center gap-2 text-[1.0625rem]">
                   <FaWhatsapp className="size-4" aria-hidden="true" />
-                  {site.whatsapp.display}
+                  Chat on WhatsApp
                   <span className="sr-only">(opens WhatsApp)</span>
                 </a>
               </dd>

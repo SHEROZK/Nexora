@@ -9,6 +9,10 @@
     "intro": "Most software fails at the joins: where the screen meets the API, where the API meets the money, where a model meets real input. I build on both sides of each join, so there is nobody to hand the problem to.",
     "background": "I studied computer science in Mumbai and started out building websites for clients. I later worked in business development, which is where I learned to read a problem from the owner's side of the table. I build software in Dubai now."
   },
+  "contact": {
+    "email": "business@nexoratechnology.me",
+    "whatsapp": "+971563619584"
+  },
   "hidden": [],
   "motion": {
     "hero": "full",

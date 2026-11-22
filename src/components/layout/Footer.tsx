@@ -22,7 +22,7 @@ export function Footer() {
           </p>
           <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link mt-8 flex w-fit items-center gap-2 text-[1.0625rem]">
             <FaWhatsapp className="size-4" aria-hidden="true" />
-            WhatsApp {site.whatsapp.display}
+            Chat on WhatsApp
             <span className="sr-only">(opens WhatsApp)</span>
           </a>
           <a href={mailto()} className="link mt-3 inline-block break-all text-[1.0625rem]">

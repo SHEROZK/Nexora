@@ -216,7 +216,7 @@ export default function Home() {
         <div className="shell flex flex-wrap justify-between gap-4 border-t-2 border-fg py-5">
           <p className="t-data">
             <a href={whatsapp()} target="_blank" rel="noopener noreferrer" className="link">
-              WhatsApp {site.whatsapp.display}
+              Chat on WhatsApp
             </a>{" "}
             · {site.location} · {site.timezone}
           </p>
